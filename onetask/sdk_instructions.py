@@ -1,4 +1,4 @@
- ██████╗ ███╗   ██╗███████╗████████╗ █████╗ ███████╗██╗  ██╗    ███████╗██████╗ ██╗  ██╗
+INSTRUCTIONS = """ ██████╗ ███╗   ██╗███████╗████████╗ █████╗ ███████╗██╗  ██╗    ███████╗██████╗ ██╗  ██╗
 ██╔═══██╗████╗  ██║██╔════╝╚══██╔══╝██╔══██╗██╔════╝██║ ██╔╝    ██╔════╝██╔══██╗██║ ██╔╝
 ██║   ██║██╔██╗ ██║█████╗     ██║   ███████║███████╗█████╔╝     ███████╗██║  ██║█████╔╝
 ██║   ██║██║╚██╗██║██╔══╝     ██║   ██╔══██║╚════██║██╔═██╗     ╚════██║██║  ██║██╔═██╗
@@ -28,9 +28,9 @@ ________________________________________________________________________________
 
 You can define your functions as in the following example:
 >>> def example_lf(record):
-...     """
+...     '''
 ...     This is an exemplary labeling function!
-...     """
+...     '''
 ...
 ...     if record['attributes'][<attribute>] in ['some-value', 'another-value']:
 ...         return <label>
@@ -57,4 +57,4 @@ by id or fetching some sample records, e.g.:
 >>> record_list = client.get_sample_records() # you can also access by id
 
 Also, you can initially run your labeling function on your local machine for tests:
->>> record_hit_list = lf.execute(record_list)
+>>> record_hit_list = lf.execute(record_list)"""

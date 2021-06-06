@@ -6,6 +6,7 @@ from onetask import api_calls
 from onetask import entities
 from onetask import exceptions
 from onetask import factory
+from onetask import sdk_instructions
 from onetask import settings
 from onetask import utilities
 from onetask.factory import build_lf  # shortcut for convenience
@@ -34,8 +35,6 @@ class Client:
         )
 
     def __repr__(self) -> str:
-        with open(settings.SIGNATURE_FILE, "r", encoding="utf-8") as signature_file:
-            signature_text = signature_file.read()
 
         call = api_calls.GetProjectInfoCall(
             api_token=self.api_token,
@@ -53,6 +52,7 @@ class Client:
             "<attribute>": f"'{attributes[0]}'",
             "<label>": f"'{labels[0]}'"
         }
+        signature_text = sdk_instructions.INSTRUCTIONS
         for token, replacement in replacement_dict.items():
             signature_text = signature_text.replace(token, replacement)
         return signature_text
