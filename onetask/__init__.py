@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import logging
-from typing import List
+from typing import List, Union
+
+import pandas as pd
 
 from onetask import api_calls
 from onetask import entities
@@ -8,8 +10,9 @@ from onetask import exceptions
 from onetask import factory
 from onetask import sdk_instructions
 from onetask import settings
-from onetask import utilities
 from onetask.factory import build_lf  # shortcut for convenience
+from onetask.utils import object_utils
+from onetask.utils.pandas_utils import attributes_df_from_records  # shortcut for convenience
 
 
 class Client:
@@ -102,12 +105,13 @@ class Client:
         return lf
 
     def get_sample_records(
-            self, max_number_samples: int = 100
-    ) -> List[entities.Record]:
+            self, max_number_samples: int = 100, as_df: bool = False
+    ) -> Union[List[entities.Record], pd.DataFrame]:
         """
         Retrieve random record samples of your current project.
 
         :param max_number_samples: A max number of samples you want to retrieve.
+        :param as_df: If true, the records are wrapped by a pandas DataFrame.
         :return: List of sample records as onetask entities.
         """
 
@@ -121,7 +125,10 @@ class Client:
         for record_dict in record_dict_list:
             record = factory.build_record_from_dict(record_dict)
             record_list.append(record)
-        return record_list
+        if as_df:
+            return attributes_df_from_records(record_list=record_list)
+        else:
+            return record_list
 
     def get_record_by_id(
             self, custom_id: str

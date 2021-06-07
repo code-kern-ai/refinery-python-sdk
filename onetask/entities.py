@@ -5,7 +5,7 @@ from typing import Optional, List, Dict, Any, Generator, Tuple
 
 import numpy as np
 
-from onetask import utilities
+from onetask.utils import object_utils
 
 
 class OneTaskBaseEntity(ABC):
@@ -14,13 +14,13 @@ class OneTaskBaseEntity(ABC):
     """
 
     def __repr__(self) -> str:
-        return utilities.create_representational_string(self)
+        return object_utils.create_representational_string(self)
 
     def __str__(self) -> str:
-        return utilities.create_display_string(self)
+        return object_utils.create_display_string(self)
 
     def __iter__(self) -> Generator[Any, Tuple[str, Any], None]:
-        return utilities.create_generator(self)
+        return object_utils.create_generator(self)
 
     def __getitem__(self, item) -> Any:
         return getattr(self, item)
@@ -134,8 +134,8 @@ class LabelingFunction:
     def __repr__(self) -> str:
         return (
             f'{self.__module__}.{self.__class__.__name__}(\n'
-            f'    definition={utilities.create_representational_string(self.definition, indent_add=4)},\n'
-            f'    body={utilities.create_representational_string(self.body, indent_add=4)}\n'
+            f'    definition={object_utils.create_representational_string(self.definition, indent_add=4)},\n'
+            f'    body={object_utils.create_representational_string(self.body, indent_add=4)}\n'
             ')'
         )
 
