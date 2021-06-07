@@ -2,7 +2,7 @@
 
 # onetask API for Python
 
-Official Python SDK for the [onetask API](https://docs.onetask.ai/reference). Leverage your labeling using Weak Supervision and Active Learning.
+Official Python SDK for onetask.
 
 ## [](https://github.com/onetask-ai/onetask-python#installation)Installation
 
@@ -118,4 +118,4 @@ You can always fetch your registered labeling functions.
 lf_list = client.get_all_lfs()
 ```
 
-If you have any further questions which are not covered by this README or our [documentations](www.docs.onetask.ai/), please do not hesitate to [contact us directly](mailto:info@onetask.ai) 
+If you have any further questions which are not covered by this README, please do not hesitate to [contact us directly](mailto:info@onetask.ai) 
