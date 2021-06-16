@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
+import json
 import logging
-from typing import List, Union
+from typing import List, Union, Optional
 
 import pandas as pd
+from wasabi import msg
 
 from onetask import api_calls
 from onetask import entities
@@ -10,6 +12,7 @@ from onetask import exceptions
 from onetask import factory
 from onetask import sdk_instructions
 from onetask import settings
+from onetask.embeddings.baseline import get_baseline_embedding
 from onetask.factory import build_lf  # shortcut for convenience
 from onetask.utils import object_utils
 from onetask.utils.pandas_utils import attributes_df_from_records  # shortcut for convenience
@@ -39,11 +42,7 @@ class Client:
 
     def __repr__(self) -> str:
 
-        call = api_calls.GetProjectInfoCall(
-            api_token=self.api_token,
-            project_id=self.project_id
-        )
-        info_dict = call.content
+        info_dict = self.get_project_info()
 
         labels = [label_dict["name"] for label_dict in info_dict["labels"]]
         attributes = [label_dict["path"] for label_dict in info_dict["attributes"]]
@@ -59,6 +58,13 @@ class Client:
         for token, replacement in replacement_dict.items():
             signature_text = signature_text.replace(token, replacement)
         return signature_text
+
+    def get_project_info(self):
+        call = api_calls.GetProjectInfoCall(
+            api_token=self.api_token,
+            project_id=self.project_id
+        )
+        return call.content
 
     def get_all_lfs(self) -> List[entities.LabelingFunction]:
         """
@@ -104,18 +110,18 @@ class Client:
         lf = factory.build_lf_from_dict(lf_dict)
         return lf
 
-    def get_sample_records(
-            self, max_number_samples: int = 100, as_df: bool = False
+    def get_all_records(
+            self, max_number_samples: int = None, as_df: bool = False
     ) -> Union[List[entities.Record], pd.DataFrame]:
         """
-        Retrieve random record samples of your current project.
+        Retrieve records of your current project.
 
         :param max_number_samples: A max number of samples you want to retrieve.
         :param as_df: If true, the records are wrapped by a pandas DataFrame.
         :return: List of sample records as onetask entities.
         """
 
-        call = api_calls.GetSampleRecordsCall(
+        call = api_calls.GetAllRecordsCall(
             max_number_samples=max_number_samples,
             api_token=self.api_token,
             project_id=self.project_id
@@ -170,3 +176,33 @@ class Client:
         )
         internal_id = call.content.get("internal_id")
         lf.definition.internal_id = internal_id
+
+    def create_baseline_embedding_dict_for_records(
+            self, return_feature_names: bool = False, to_file: Optional[str] = None
+    ):
+        msg.info("Loading project information...")
+        project_info = self.get_project_info()
+        msg.info("Loading records...")
+        record_list = self.get_all_records()
+        attributes_schema = project_info["attributes"]
+        attribute_dict_list = []
+        for record in record_list:
+            attribute_dict_list.append(record["attributes"])
+        msg.info("Calculating embeddings...")
+        feature_matrix, feature_names = get_baseline_embedding(attribute_dict_list, attributes_schema)
+        embedding_dict = {}
+        msg.info("Mapping embeddings to records...")
+        for feature_vector, record in zip(feature_matrix, record_list):
+            embedding_dict[record.custom_id] = feature_vector
+        msg.good("Done!")
+
+        if to_file is not None:
+            with open(to_file, "w") as file:
+                json.dump(embedding_dict, file)
+            if return_feature_names:
+                return feature_names
+        else:
+            if return_feature_names:
+                return embedding_dict, feature_names
+            else:
+                return embedding_dict

@@ -205,9 +205,9 @@ class GetLabelingFunctionByIdCall(GetCall):
         )
 
 
-class GetSampleRecordsCall(GetCall):
+class GetAllRecordsCall(GetCall):
     """
-    GET Call to the Record Samples SDK endpoint.
+    GET Call to the Record SDK endpoint.
 
     :param max_number_samples: A max number of samples you want to retrieve.
     :param api_token: Your API token provided in the client.
