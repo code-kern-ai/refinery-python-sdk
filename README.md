@@ -40,7 +40,7 @@ There are several ways how you can start using our SDK. We'll show them in the f
 
 ```python
 max_number_samples = 100 # default value
-record_list = client.get_sample_records(max_number_samples=max_number_samples)
+record_list = client.get_all_records(max_number_samples=max_number_samples)
 ```
 
 ### [](https://github.com/onetask-ai/onetask-python#writing-labeling-functions)Writing Labeling Functions
