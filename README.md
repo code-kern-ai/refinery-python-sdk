@@ -17,7 +17,7 @@ Before making requests to the API, you need to create an instance of the onetask
 
 ```python
 from onetask import Client
-# Instantiate the client Using your API key
+# Instantiate the client using your org_id and project_id
 org_id = '<YOUR ORG ID HERE>'
 project_id = '<YOUR PROJECT ID HERE>'
 client = Client(org_id=org_id, project_id=project_id)
@@ -28,5 +28,5 @@ You can now register your custom Python function
 def my_first_lf(record):
     if "you" in record["headline"].lower():
         return "Clickbait"
-client.register_lf(my_first_lf())
+client.register_lf(my_first_lf)
 ```
