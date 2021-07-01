@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import pkg_resources
 
+from onetask import exceptions, settings
+
 try:
     version = pkg_resources.get_distribution("onetask").version
 except pkg_resources.DistributionNotFound:
@@ -12,28 +14,18 @@ from typing import Dict, Any, Optional, Union
 from better_abc import ABCMeta, abstract_attribute
 
 
-
 class OneTaskCall(metaclass=ABCMeta):
-    """
-    Base entity for calls to the onetask SDK API.
-
-    :param url: URL of the API to be addressed.
-    :param api_token: Your API token provided in the client.
-    :param params: Request parameters.
-    :param data: Request data.
-    """
 
     def __init__(
             self,
             url: str,
-            org_id: str,
-            project_id: str,
+            api_token: str,
             data: Optional[Dict[str, Any]] = None
     ):
 
         url = url
         headers = {
-            #"Authorization": f"Token {api_token}",
+            # "Authorization": f"Token {api_token}",
             "Content-Type": "application/json",
             "User-Agent": f"python-sdk-{version}"
         }
@@ -47,13 +39,7 @@ class OneTaskCall(metaclass=ABCMeta):
         pass
 
     @property
-    def content(self) -> Union[Dict[str, Any], exceptions.OneTaskError]:
-        """
-        Contains the result of the request.
-
-        :raise: OneTaskError if the SDK has not been used correctly.
-        :return: Request response data.
-        """
+    def content(self) -> Union[Dict[str, Any], exceptions.APIError]:
         status_code = self.response.status_code
 
         json_data = self.response.json()
@@ -62,7 +48,7 @@ class OneTaskCall(metaclass=ABCMeta):
         else:
             error_code = json_data.get("error_code")
             error_message = json_data.get("error_message")
-            exception = exceptions.get_exception_class(
+            exception = exceptions.get_api_exception_class(
                 status_code=status_code,
                 error_code=error_code,
                 error_message=error_message
@@ -70,106 +56,42 @@ class OneTaskCall(metaclass=ABCMeta):
             raise exception
 
 
-class GetCall(OneTaskCall):
-    """
-    Base entity for GET calls to the onetask SDK API.
-
-    :param url: URL of the API to be addressed.
-    :param api_token: Your API token provided in the client.
-    :param project_id: Request data.
-    :param params: Request parameters.
-    """
-
-    def __init__(
-            self,
-            url: str,
-            api_token: str,
-            project_id: str,
-            params: Dict[str, Any]
-    ):
-        self.method = "GET"
-
-        params = {
-            "project_id": project_id,
-            **params
-        }
-
-        super().__init__(
-            url=url,
-            api_token=api_token,
-            params=params
-        )
-
-
 class PostCall(OneTaskCall):
-    """
-    Base entity for POST calls to the onetask SDK API.
-
-    :param url: URL of the API to be addressed.
-    :param api_token: Your API token provided in the client.
-    :param project_id: The Project ID provided to you.
-    :param data: Request data.
-    :param params: Request parameters.
-    """
 
     def __init__(
             self,
             url: str,
-            api_token: str,
-            project_id: str,
+            # api_token: str, TODO: include once auth is done
             data: Dict[str, Any],
-            params: Optional[Dict[str, Any]] = None
     ):
         self.method = "POST"
 
-        if data is None:
-            data = {"project_id": project_id}
-        else:
-            data = {
-                "project_id": project_id,
-                **data
-            }
-
+        api_token = ""
         super().__init__(
             url=url,
             api_token=api_token,
-            data=data,
-            params=params
-        )
-
-
-class GetProjectInfoCall(GetCall):
-    """
-    GET Call to the Project Information SDK endpoint.
-
-    :param api_token: Your API token provided in the client.
-    :param project_id: The Project ID provided to you.
-    """
-
-    def __init__(self, api_token: str, project_id: str):
-        super().__init__(
-            url=settings.PROJECT_INFO_URL,
-            api_token=api_token,
-            project_id=project_id,
-            params={}
+            data=data
         )
 
 
 class RegisterLabelingFunctionCall(PostCall):
-    """
-    POST Call to the Labeling Function Registry SDK endpoint.
-
-    :param labeling_function: Labeling function that should be registered.
-    :param api_token: Your API token provided in the client.
-    :param project_id: The Project ID provided to you.
-    """
 
     def __init__(
-            self, labeling_function: entities.LabelingFunction, api_token: str, project_id: str
+            self,
+            fn_name: str,
+            source_code: str,
+            description: str,
+            org_id: str,
+            project_id: str,
     ):
+        body = {
+            "org_id": org_id,
+            "project_id": project_id,
+            "name": fn_name,
+            "function": source_code,
+            "description": description
+        }
         super().__init__(
-            url=settings.LF_INSTANCE_URL,
-            api_token=api_token,
-            project_id=project_id,
-            data=dict(labeling_function)
+            url=settings.LABELING_FUNCTION_URL,
+            data=body
         )
