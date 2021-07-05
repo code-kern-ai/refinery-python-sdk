@@ -11,9 +11,13 @@ from onetask.labeling_function import unpack_python_function
 class Client:
 
     def __init__(
-            self, org_id: str, project_id: str
+            self, user_name: str,  password: str, project_id: str
     ):
-        self.org_id = org_id
+        self.session_token = api_calls.create_session_token(user_name=user_name, password=password)
+        if self.session_token is not None:
+            msg.good("Logged in to system.")
+        else:
+            msg.fail("Could not log in. Please check your username and password.")
         self.project_id = project_id
 
     def get_records(
@@ -30,7 +34,7 @@ class Client:
             fn_name=fn_name,
             source_code=source_code,
             description=description,
-            org_id=self.org_id,
-            project_id=self.project_id
+            project_id=self.project_id,
+            session_token=self.session_token
         )
         msg.good(f"Registered labeling function '{fn_name}'.")

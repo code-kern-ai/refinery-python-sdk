@@ -6,7 +6,14 @@ from onetask import exceptions
 
 def unpack_python_function(fn: Callable):
     name = fn.__name__
-    source_code = inspect.getsource(fn).replace(f"def {name}(", "def lf(")
+    replace_operations = {
+        f"def {name}(": "def lf(",
+        f'    """{fn.__doc__}"""\n': "",
+        "    ": "\t"
+    }
+    source_code = inspect.getsource(fn)
+    for key, value in replace_operations.items():
+        source_code = source_code.replace(key, value)
     docs = inspect.getdoc(fn)
 
     check_signature(source_code)

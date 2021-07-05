@@ -14,18 +14,43 @@ from typing import Dict, Any, Optional, Union
 from better_abc import ABCMeta, abstract_attribute
 
 
+# no call to the onetask system, therefore include it here
+def create_session_token(
+        user_name: str,
+        password: str
+):
+    headers = {"Accept": "application/json"}
+    action_url = (
+        requests.get(settings.AUTHENTICATION_URL, headers=headers)
+            .json()
+            .get("ui")
+            .get("action")
+    )
+    session_token = (
+        requests.post(
+            action_url,
+            headers=headers,
+            json={"method": "password", "password": password, "password_identifier": user_name},
+        )
+            .json()
+            .get("session_token")
+    )
+
+    return session_token
+
+
 class OneTaskCall(metaclass=ABCMeta):
 
     def __init__(
             self,
             url: str,
-            api_token: str,
+            session_token: str,
             data: Optional[Dict[str, Any]] = None
     ):
 
         url = url
         headers = {
-            # "Authorization": f"Token {api_token}",
+            "Authorization": f"Bearer {session_token}",
             "Content-Type": "application/json",
             "User-Agent": f"python-sdk-{version}"
         }
@@ -61,15 +86,14 @@ class PostCall(OneTaskCall):
     def __init__(
             self,
             url: str,
-            # api_token: str, TODO: include once auth is done
+            session_token: str,
             data: Dict[str, Any],
     ):
         self.method = "POST"
 
-        api_token = ""
         super().__init__(
             url=url,
-            api_token=api_token,
+            session_token=session_token,
             data=data
         )
 
@@ -81,11 +105,11 @@ class RegisterLabelingFunctionCall(PostCall):
             fn_name: str,
             source_code: str,
             description: str,
-            org_id: str,
             project_id: str,
+            session_token: str
     ):
         body = {
-            "org_id": org_id,
+            "org_id": "60db22faea4261f4df63a3b1",  # TODO: remove
             "project_id": project_id,
             "name": fn_name,
             "function": source_code,
@@ -93,5 +117,6 @@ class RegisterLabelingFunctionCall(PostCall):
         }
         super().__init__(
             url=settings.LABELING_FUNCTION_URL,
+            session_token=session_token,
             data=body
         )
