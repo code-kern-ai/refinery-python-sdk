@@ -68,6 +68,7 @@ class OneTaskCall(metaclass=ABCMeta):
         status_code = self.response.status_code
 
         json_data = self.response.json()
+        
         if status_code == 200:
             return json_data
         else:
@@ -109,7 +110,6 @@ class RegisterLabelingFunctionCall(PostCall):
             session_token: str
     ):
         body = {
-            "org_id": "60db22faea4261f4df63a3b1",  # TODO: remove
             "project_id": project_id,
             "name": fn_name,
             "function": source_code,
