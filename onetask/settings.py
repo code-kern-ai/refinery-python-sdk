@@ -1,5 +1,15 @@
 # -*- coding: utf-8 -*-
-BASE_URL = "https://app.dev.onetask.ai"
+LOCALHOST_SWITCH = False
 
-AUTHENTICATION_URL = f"{BASE_URL}/.ory/kratos/public/self-service/login/api"
-LABELING_FUNCTION_URL = f"{BASE_URL}/labelfunction"
+def set_to_localhost():
+    global LOCALHOST_SWITCH
+    LOCALHOST_SWITCH = True
+
+def get_base_url():
+    return "http://localhost:8000" if LOCALHOST_SWITCH else "https://app.dev.onetask.ai"
+
+def get_authentication_url():
+    return f"{get_base_url()}/.ory/kratos/public/self-service/login/api"
+
+def get_labeling_function_url():
+    return f"{get_base_url()}/labelfunction"

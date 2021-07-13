@@ -2,7 +2,7 @@
 
 from typing import Callable
 
-from onetask import api_calls
+from onetask import api_calls, settings
 from wasabi import msg
 
 from onetask.labeling_function import unpack_python_function
@@ -11,13 +11,18 @@ from onetask.labeling_function import unpack_python_function
 class Client:
 
     def __init__(
-            self, user_name: str,  password: str, project_id: str
+            self, user_name: str,  password: str, project_id: str, debug: bool = False
     ):
-        self.session_token = api_calls.create_session_token(user_name=user_name, password=password)
-        if self.session_token is not None:
-            msg.good("Logged in to system.")
+        if not debug:
+            self.session_token = api_calls.create_session_token(user_name=user_name, password=password)
+            if self.session_token is not None:
+                msg.good("Logged in to system.")
+            else:
+                msg.fail("Could not log in. Please check your username and password.")
         else:
-            msg.fail("Could not log in. Please check your username and password.")
+            self.session_token = None
+            settings.set_to_localhost()
+        msg.info("Sending requests to localhost")
         self.project_id = project_id
 
     def get_records(

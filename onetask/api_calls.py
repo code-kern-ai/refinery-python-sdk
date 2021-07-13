@@ -21,7 +21,7 @@ def create_session_token(
 ):
     headers = {"Accept": "application/json"}
     action_url = (
-        requests.get(settings.AUTHENTICATION_URL, headers=headers)
+        requests.get(settings.get_authentication_url(), headers=headers)
             .json()
             .get("ui")
             .get("action")
@@ -47,13 +47,13 @@ class OneTaskCall(metaclass=ABCMeta):
             session_token: str,
             data: Optional[Dict[str, Any]] = None
     ):
-
-        url = url
         headers = {
-            "Authorization": f"Bearer {session_token}",
             "Content-Type": "application/json",
             "User-Agent": f"python-sdk-{version}"
         }
+        if session_token:
+            headers["Authorization"] = f"Bearer {session_token}"
+
         if data is None:
             self.response = requests.request(self.method, url, headers=headers)
         else:
@@ -116,7 +116,7 @@ class RegisterLabelingFunctionCall(PostCall):
             "description": description
         }
         super().__init__(
-            url=settings.LABELING_FUNCTION_URL,
+            url=settings.get_labeling_function_url(),
             session_token=session_token,
             data=body
         )
