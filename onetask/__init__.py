@@ -9,12 +9,13 @@ from onetask.labeling_function import unpack_python_function
 
 
 class Client:
-
     def __init__(
-            self, user_name: str,  password: str, project_id: str, debug: bool = False
+        self, user_name: str, password: str, project_id: str, debug: bool = False
     ):
         if not debug:
-            self.session_token = api_calls.create_session_token(user_name=user_name, password=password)
+            self.session_token = api_calls.create_session_token(
+                user_name=user_name, password=password
+            )
             if self.session_token is not None:
                 msg.good("Logged in to system.")
             else:
@@ -25,21 +26,13 @@ class Client:
         msg.info("Sending requests to localhost")
         self.project_id = project_id
 
-    def get_records(
-            self, max_number_samples: int = None
-    ):
-        raise NotImplementedError
-
-    def register_lf(
-            self,
-            lf: Callable
-    ) -> None:
+    def register_lf(self, lf: Callable) -> None:
         fn_name, source_code, description = unpack_python_function(lf)
         _ = api_calls.RegisterLabelingFunctionCall(
             fn_name=fn_name,
             source_code=source_code,
             description=description,
             project_id=self.project_id,
-            session_token=self.session_token
+            session_token=self.session_token,
         )
         msg.good(f"Registered labeling function '{fn_name}'.")

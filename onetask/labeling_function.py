@@ -9,7 +9,7 @@ def unpack_python_function(fn: Callable):
     replace_operations = {
         f"def {name}(": "def lf(",
         f'    """{fn.__doc__}"""\n': "",
-        "    ": "\t"
+        "    ": "\t",
     }
     source_code = inspect.getsource(fn)
     for key, value in replace_operations.items():

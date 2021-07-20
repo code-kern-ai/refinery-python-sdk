@@ -38,11 +38,13 @@ RESPONSE_CODES_API_EXCEPTION_MAP = {
 
 
 def get_api_exception_class(
-        status_code: int, error_code: Optional[str] = None, error_message: Optional[str] = None
+    status_code: int,
+    error_code: Optional[str] = None,
+    error_message: Optional[str] = None,
 ) -> APIError:
     exception_or_dict = RESPONSE_CODES_API_EXCEPTION_MAP.get(status_code, APIError)
     if isinstance(exception_or_dict, dict):
-        exception_class = exception_or_dict.get(error_code, exception_or_dict['*'])
+        exception_class = exception_or_dict.get(error_code, exception_or_dict["*"])
     else:
         exception_class = exception_or_dict
     return exception_class(error_message)

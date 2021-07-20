@@ -15,41 +15,38 @@ from better_abc import ABCMeta, abstract_attribute
 
 
 # no call to the onetask system, therefore include it here
-def create_session_token(
-        user_name: str,
-        password: str
-):
+def create_session_token(user_name: str, password: str):
     headers = {"Accept": "application/json"}
     action_url = (
         requests.get(settings.get_authentication_url(), headers=headers)
-            .json()
-            .get("ui")
-            .get("action")
+        .json()
+        .get("ui")
+        .get("action")
     )
     session_token = (
         requests.post(
             action_url,
             headers=headers,
-            json={"method": "password", "password": password, "password_identifier": user_name},
+            json={
+                "method": "password",
+                "password": password,
+                "password_identifier": user_name,
+            },
         )
-            .json()
-            .get("session_token")
+        .json()
+        .get("session_token")
     )
 
     return session_token
 
 
 class OneTaskCall(metaclass=ABCMeta):
-
     def __init__(
-            self,
-            url: str,
-            session_token: str,
-            data: Optional[Dict[str, Any]] = None
+        self, url: str, session_token: str, data: Optional[Dict[str, Any]] = None
     ):
         headers = {
             "Content-Type": "application/json",
-            "User-Agent": f"python-sdk-{version}"
+            "User-Agent": f"python-sdk-{version}",
         }
         if session_token:
             headers["Authorization"] = f"Bearer {session_token}"
@@ -57,7 +54,9 @@ class OneTaskCall(metaclass=ABCMeta):
         if data is None:
             self.response = requests.request(self.method, url, headers=headers)
         else:
-            self.response = requests.request(self.method, url, json=data, headers=headers)
+            self.response = requests.request(
+                self.method, url, json=data, headers=headers
+            )
 
     @abstract_attribute
     def method(self):
@@ -68,7 +67,7 @@ class OneTaskCall(metaclass=ABCMeta):
         status_code = self.response.status_code
 
         json_data = self.response.json()
-        
+
         if status_code == 200:
             return json_data
         else:
@@ -77,46 +76,40 @@ class OneTaskCall(metaclass=ABCMeta):
             exception = exceptions.get_api_exception_class(
                 status_code=status_code,
                 error_code=error_code,
-                error_message=error_message
+                error_message=error_message,
             )
             raise exception
 
 
 class PostCall(OneTaskCall):
-
     def __init__(
-            self,
-            url: str,
-            session_token: str,
-            data: Dict[str, Any],
+        self,
+        url: str,
+        session_token: str,
+        data: Dict[str, Any],
     ):
         self.method = "POST"
 
-        super().__init__(
-            url=url,
-            session_token=session_token,
-            data=data
-        )
+        super().__init__(url=url, session_token=session_token, data=data)
 
 
 class RegisterLabelingFunctionCall(PostCall):
-
     def __init__(
-            self,
-            fn_name: str,
-            source_code: str,
-            description: str,
-            project_id: str,
-            session_token: str
+        self,
+        fn_name: str,
+        source_code: str,
+        description: str,
+        project_id: str,
+        session_token: str,
     ):
         body = {
             "project_id": project_id,
             "name": fn_name,
             "function": source_code,
-            "description": description
+            "description": description,
         }
         super().__init__(
             url=settings.get_labeling_function_url(),
             session_token=session_token,
-            data=body
+            data=body,
         )
