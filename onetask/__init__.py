@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from typing import Callable
+from typing import Callable, List
 
 from onetask import api_calls, settings
 from wasabi import msg
 
-from onetask.labeling_function import unpack_python_function
+from onetask.labeling_function import build_keywords_lf, unpack_python_function
 
 
 class Client:
@@ -23,11 +23,30 @@ class Client:
         else:
             self.session_token = None
             settings.set_to_localhost()
-        msg.info("Sending requests to localhost")
+            msg.info("Sending requests to localhost")
         self.project_id = project_id
 
-    def register_lf(self, lf: Callable) -> None:
+    def register_custom_lf(self, lf: Callable) -> None:
         fn_name, source_code, description = unpack_python_function(lf)
+        _ = api_calls.RegisterLabelingFunctionCall(
+            fn_name=fn_name,
+            source_code=source_code,
+            description=description,
+            project_id=self.project_id,
+            session_token=self.session_token,
+        )
+        msg.good(f"Registered labeling function '{fn_name}'.")
+
+    def register_keywords_lf(
+        self,
+        label: str,
+        keywords: List[str],
+        attributes: List[str],
+        lowercase: bool = True,
+    ):
+        fn_name, source_code, description = build_keywords_lf(
+            label, keywords, attributes, lowercase
+        )
         _ = api_calls.RegisterLabelingFunctionCall(
             fn_name=fn_name,
             source_code=source_code,

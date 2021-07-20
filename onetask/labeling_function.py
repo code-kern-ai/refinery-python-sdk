@@ -1,5 +1,5 @@
 import inspect
-from typing import Callable
+from typing import Callable, List
 
 from onetask import exceptions
 
@@ -34,3 +34,23 @@ def check_signature(source_code: str) -> None:
         raise exceptions.ParameterError(
             f"{number_parameters} parameters provided. Please use exactly one."
         )
+
+
+def build_keywords_lf(
+    label, keywords: List[str], attributes: List[str], lowercase: bool
+):
+    fn_name = f"lookup_kw_{'_'.join(keywords)}_in_{'_'.join(attributes)}"
+    source_code = "def lf(record):\n"
+    source_code += f"\tkeywords = {keywords}\n"
+    source_code += "\tattributes = ["
+    for attribute in attributes:
+        if lowercase:
+            source_code += f"record['{attribute}'].lower(),"
+        else:
+            source_code += f"record['{attribute}'],"
+    source_code += "]\n\tfor keyword in keywords:\n"
+    source_code += "\t\tfor attribute in attributes:\n"
+    source_code += "\t\t\tif keyword in attribute:\n"
+    source_code += f"\t\t\t\treturn '{label}'\n"
+    description = f"Lookup keywords {keywords} in attributes {attributes}"
+    return fn_name, source_code, description
