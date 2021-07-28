@@ -1,14 +1,22 @@
 # -*- coding: utf-8 -*-
-LOCALHOST_SWITCH = False
+STAGE: str
 
 
-def set_to_localhost():
-    global LOCALHOST_SWITCH
-    LOCALHOST_SWITCH = True
+def set_stage(stage):
+    global STAGE
+    STAGE = stage
 
 
 def get_base_url():
-    return "http://localhost:8000" if LOCALHOST_SWITCH else "https://app.dev.onetask.ai"
+    global STAGE
+    if STAGE == "prod":
+        return "https://app.onetask.ai"
+    elif STAGE == "test":
+        return "https://app.test.onetask.ai"
+    elif STAGE == "dev":
+        return "https://app.dev.onetask.ai"
+    else:
+        return "http://localhost:8000"
 
 
 def get_authentication_url():

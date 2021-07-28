@@ -10,9 +10,10 @@ from onetask.labeling_function import build_keywords_lf, unpack_python_function
 
 class Client:
     def __init__(
-        self, user_name: str, password: str, project_id: str, debug: bool = False
+        self, user_name: str, password: str, project_id: str, stage: str = "prod"
     ):
-        if not debug:
+        settings.set_stage(stage)
+        if stage in ["prod", "test", "dev"]:
             self.session_token = api_calls.create_session_token(
                 user_name=user_name, password=password
             )
