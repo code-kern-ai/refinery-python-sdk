@@ -23,7 +23,6 @@ class Client:
                 msg.fail("Could not log in. Please check your username and password.")
         else:
             self.session_token = None
-            settings.set_to_localhost()
             msg.info("Sending requests to localhost")
         self.project_id = project_id
 
