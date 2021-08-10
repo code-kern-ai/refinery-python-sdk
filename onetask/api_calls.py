@@ -47,9 +47,8 @@ class OneTaskCall(metaclass=ABCMeta):
         headers = {
             "Content-Type": "application/json",
             "User-Agent": f"python-sdk-{version}",
+            "Authorization": f"Bearer {session_token}",
         }
-        if session_token:
-            headers["Authorization"] = f"Bearer {session_token}"
 
         if data is None:
             self.response = requests.request(self.method, url, headers=headers)

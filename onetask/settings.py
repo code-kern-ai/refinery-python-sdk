@@ -16,7 +16,7 @@ def get_base_url():
     elif STAGE == "dev":
         return "https://app.dev.onetask.ai"
     else:
-        return "http://localhost:8000"
+        return STAGE
 
 
 def get_authentication_url():

@@ -13,17 +13,13 @@ class Client:
         self, user_name: str, password: str, project_id: str, stage: str = "prod"
     ):
         settings.set_stage(stage)
-        if stage in ["prod", "test", "dev"]:
-            self.session_token = api_calls.create_session_token(
-                user_name=user_name, password=password
-            )
-            if self.session_token is not None:
-                msg.good("Logged in to system.")
-            else:
-                msg.fail("Could not log in. Please check your username and password.")
+        self.session_token = api_calls.create_session_token(
+            user_name=user_name, password=password
+        )
+        if self.session_token is not None:
+            msg.good("Logged in to system.")
         else:
-            self.session_token = None
-            msg.info("Sending requests to localhost")
+            msg.fail("Could not log in. Please check your username and password.")
         self.project_id = project_id
 
     def register_custom_lf(self, lf: Callable) -> None:
