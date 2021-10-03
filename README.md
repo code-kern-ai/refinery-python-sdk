@@ -16,22 +16,47 @@ You can clone the repository and run the setup.py script:
 
 ## [](https://github.com/onetask-ai/onetask-python#usage)Usage
 
-Before making requests to the API, you need to create an instance of the onetask client.
-To do so, you will have to login like you do in the system while providing the project id you work in:
+The SDK is currently focused solely on labeling functions. You can register your own functions or let our system generate suggestions on which you can build. In the near future, we'll extend the Python SDK to include programmatic imports and exports, data access, and many more.
+
+You begin by creating a `Client` object. The `Client` will generate and store a session token for you based on your user name, password, and project id. The project id can be found in the URL, e.g. https://app.dev.onetask.ai/app/projects/**03f7d82c-f14c-4f0f-a1ff-59533bab30cc**/overview. Simply copy and paste this into the following pattern:
 
 ```python
 from onetask import Client
-# Instantiate the client using your org_id and project_id
-user_name = '<YOUR USER NAME HERE>'
-password = '<YOUR PASSWORD HERE>'
-project_id = '<YOUR PROJECT ID HERE>'
-client = Client(user_name=user_name, password=password, project_id=project_id)
+
+username = "your-username"
+project_id = "your-project-id"
+password = "your-password"
+stage="beta" # if you have onetask on local, you can also set stage to "local"
+client = Client(username, password, project_id, stage)
 ```
 
-You can now register your custom Python function
+Once you correctly instantiated your Client, you can start accessing our GraphQL endpoints. Please always ensure that your labeling functions:
+
+return label names that also exist in your project definition
+have exactly one parameter; we execute labeling functions on a record-basis
+If you need an import statement in your labeling functions, please check if it is given in the [whitelisted libraries](https://onetask.readme.io/reference/whitelisted-libraries). If you need a library that we have not yet whitelisted, feel free to reach out to us.
+
+The most straightforward way to create and register a labeling function is as follows:
+
 ```python
-def my_first_lf(record):
-    if "you" in record["headline"].lower():
-        return "Clickbait"
-client.register_lf(my_first_lf)
+def my_labeling_function(record):
+  """
+  This is my first labeling function. Yay!
+  Its purpose is to detect a list of values in the records that tend to
+  occur in urgent messages.
+  """
+  keywords = ["asap", "as soon as possible", "urgent"]
+  
+  message_lower = record["message"].lower()
+  for keyword in keywords:
+    if keyword in message_lower:
+      return "Urgent"
 ```
+
+You can then enter them using the client as follows:
+
+```python
+client.register_lf(my_labeling_function)
+```
+
+And that's it. You should now be able to see your labeling function in the web application. For further steps, please refer to our [readme.io](https://onetask.readme.io/reference/setting-up-the-python-sdk) documentation
