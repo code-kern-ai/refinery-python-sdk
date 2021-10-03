@@ -9,12 +9,14 @@ def set_stage(stage):
 
 def get_base_url():
     global STAGE
-    if STAGE == "prod":
-        return "https://app.onetask.ai"
+    if STAGE == "beta":
+        return "https://app.beta.onetask.ai"
     elif STAGE == "test":
         return "https://app.test.onetask.ai"
     elif STAGE == "dev":
         return "https://app.dev.onetask.ai"
+    elif STAGE == "local":
+        return "http://localhost:4455"
     else:
         return STAGE
 
@@ -23,5 +25,5 @@ def get_authentication_url():
     return f"{get_base_url()}/.ory/kratos/public/self-service/login/api"
 
 
-def get_labeling_function_url():
-    return f"{get_base_url()}/labelfunction"
+def graphql():
+    return f"{get_base_url()}/graphql/"

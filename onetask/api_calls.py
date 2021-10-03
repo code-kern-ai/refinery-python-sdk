@@ -1,17 +1,12 @@
 # -*- coding: utf-8 -*-
 import pkg_resources
-
 from onetask import exceptions, settings
+import requests
 
 try:
     version = pkg_resources.get_distribution("onetask").version
 except pkg_resources.DistributionNotFound:
     version = "noversion"
-
-import requests
-from typing import Dict, Any, Optional, Union
-
-from better_abc import ABCMeta, abstract_attribute
 
 
 # no call to the onetask system, therefore include it here
@@ -40,32 +35,29 @@ def create_session_token(user_name: str, password: str):
     return session_token
 
 
-class OneTaskCall(metaclass=ABCMeta):
-    def __init__(
-        self, url: str, session_token: str, data: Optional[Dict[str, Any]] = None
-    ):
+class GraphQLRequest:
+    def __init__(self, query, variables, session_token):
+        self.query = query
+        self.variables = variables
+        self.session_token = session_token
+
+    def execute(self):
+        body = {
+            "query": self.query,
+            "variables": self.variables,
+        }
+
         headers = {
             "Content-Type": "application/json",
             "User-Agent": f"python-sdk-{version}",
-            "Authorization": f"Bearer {session_token}",
+            "Authorization": f"Bearer {self.session_token}",
         }
 
-        if data is None:
-            self.response = requests.request(self.method, url, headers=headers)
-        else:
-            self.response = requests.request(
-                self.method, url, json=data, headers=headers
-            )
+        response = requests.post(url=settings.graphql(), json=body, headers=headers)
 
-    @abstract_attribute
-    def method(self):
-        pass
+        status_code = response.status_code
 
-    @property
-    def content(self) -> Union[Dict[str, Any], exceptions.APIError]:
-        status_code = self.response.status_code
-
-        json_data = self.response.json()
+        json_data = response.json()
 
         if status_code == 200:
             return json_data
@@ -80,35 +72,95 @@ class OneTaskCall(metaclass=ABCMeta):
             raise exception
 
 
-class PostCall(OneTaskCall):
-    def __init__(
-        self,
-        url: str,
-        session_token: str,
-        data: Dict[str, Any],
-    ):
-        self.method = "POST"
+class ProjectByProjectId(GraphQLRequest):
+    def __init__(self, project_id, session_token):
+        QUERY = """
+        query ($projectId: ID!) {
+            projectByProjectId(projectId: $projectId) {
+                id
+                labels {
+                    edges {
+                        node {
+                            name
+                        }
+                    }
+                }
+            }
+        }
+        """
 
-        super().__init__(url=url, session_token=session_token, data=data)
+        variables = {
+            "projectId": project_id,
+        }
+
+        super().__init__(QUERY, variables, session_token)
+        try:
+            self.data = self.execute()
+            self.exists = self.data.get("data").get("projectByProjectId") is not None
+        except exceptions.APIError:
+            self.exists = False
 
 
-class RegisterLabelingFunctionCall(PostCall):
-    def __init__(
-        self,
-        fn_name: str,
-        source_code: str,
-        description: str,
-        project_id: str,
-        session_token: str,
-    ):
-        body = {
-            "project_id": project_id,
-            "name": fn_name,
-            "function": source_code,
+class ManuallyLabeledRecords(GraphQLRequest):
+    def __init__(self, project_id, session_token):
+        data = ProjectByProjectId(project_id, session_token).data
+        edges = data["data"]["projectByProjectId"]["labels"]["edges"]
+        manual = [edge["node"]["name"] for edge in edges]
+
+        QUERY = """
+        query ($projectId: ID!, $manual: [String!]) {
+            searchRecords(projectId: $projectId, manual: $manual) {
+                data
+                    labelAssociations {
+                    edges {
+                        node {
+                            label {
+                                name
+                            }
+                            source
+                        }
+                    }
+                }
+            }
+        }
+
+        """
+
+        variables = {"projectId": project_id, "manual": manual}
+
+        super().__init__(QUERY, variables, session_token)
+        self.data = self.execute()
+
+
+class CreateLabelingFunction(GraphQLRequest):
+    def __init__(self, project_id, name, function, description, session_token):
+        QUERY = """
+        mutation (
+            $projectId: ID!, 
+            $name: String!, 
+            $function: String!, 
+            $description: String!
+        ) {
+            createLabelingFunction(
+                projectId: $projectId, 
+                name: $name, 
+                function: 
+                $function, 
+                description: $description
+            ) {
+                labelingFunction {
+                    id
+                }
+            }
+        }
+        """
+
+        variables = {
+            "projectId": project_id,
+            "name": name,
+            "function": function,
             "description": description,
         }
-        super().__init__(
-            url=settings.get_labeling_function_url(),
-            session_token=session_token,
-            data=body,
-        )
+
+        super().__init__(QUERY, variables, session_token)
+        _ = self.execute()

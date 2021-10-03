@@ -26,15 +26,12 @@ class UnauthorizedError(APIError):
     pass
 
 
-# 404 Not Found
-class UnknownIDException(APIError):
+# 500 Server Error
+class InternalServerError(APIError):
     pass
 
 
-RESPONSE_CODES_API_EXCEPTION_MAP = {
-    401: UnauthorizedError,
-    404: UnknownIDException,
-}
+RESPONSE_CODES_API_EXCEPTION_MAP = {401: UnauthorizedError, 500: InternalServerError}
 
 
 def get_api_exception_class(
