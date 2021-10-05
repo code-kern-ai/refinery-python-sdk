@@ -50,7 +50,7 @@ def derive_regex_candidates(nlp, df, attribute, most_common=10):
     return [regex for regex, _ in Counter(candidates).most_common(most_common)]
 
 
-def create_regex_fns(df, candidates, regex_col, label_col="label"):
+def create_regex_fns(df, candidates, regex_col, label_col="manual_label"):
     def regex_explainer(regex, attribute):
         description = ""
         terms = regex.replace("^", "").replace("$", "").split(".*?")

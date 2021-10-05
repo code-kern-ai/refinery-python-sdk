@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from json.decoder import JSONDecodeError
 import pkg_resources
 from onetask import exceptions, settings
 import requests
@@ -35,17 +36,13 @@ def create_session_token(user_name: str, password: str):
     return session_token
 
 
-class GraphQLRequest:
-    def __init__(self, query, variables, session_token):
-        self.query = query
-        self.variables = variables
+class PostRequest:
+    def __init__(self, url, body, session_token):
+        self.url = url
+        self.body = body
         self.session_token = session_token
 
     def execute(self):
-        body = {
-            "query": self.query,
-            "variables": self.variables,
-        }
 
         headers = {
             "Content-Type": "application/json",
@@ -53,17 +50,22 @@ class GraphQLRequest:
             "Authorization": f"Bearer {self.session_token}",
         }
 
-        response = requests.post(url=settings.graphql(), json=body, headers=headers)
+        response = requests.post(url=self.url, json=self.body, headers=headers)
 
         status_code = response.status_code
 
-        json_data = response.json()
-
         if status_code == 200:
+            json_data = response.json()
             return json_data
         else:
-            error_code = json_data.get("error_code")
-            error_message = json_data.get("error_message")
+            try:
+                json_data = response.json()
+                error_code = json_data.get("error_code")
+                error_message = json_data.get("error_message")
+            except JSONDecodeError:
+                error_code = 500
+                error_message = "The server was unable to process the provided data."
+
             exception = exceptions.get_api_exception_class(
                 status_code=status_code,
                 error_code=error_code,
@@ -72,95 +74,37 @@ class GraphQLRequest:
             raise exception
 
 
-class ProjectByProjectId(GraphQLRequest):
-    def __init__(self, project_id, session_token):
-        QUERY = """
-        query ($projectId: ID!) {
-            projectByProjectId(projectId: $projectId) {
-                id
-                labels {
-                    edges {
-                        node {
-                            name
-                        }
-                    }
-                }
-            }
-        }
-        """
-
-        variables = {
-            "projectId": project_id,
-        }
-
-        super().__init__(QUERY, variables, session_token)
-        try:
-            self.data = self.execute()
-            self.exists = self.data.get("data").get("projectByProjectId") is not None
-        except exceptions.APIError:
-            self.exists = False
-
-
-class ManuallyLabeledRecords(GraphQLRequest):
-    def __init__(self, project_id, session_token):
-        data = ProjectByProjectId(project_id, session_token).data
-        edges = data["data"]["projectByProjectId"]["labels"]["edges"]
-        manual = [edge["node"]["name"] for edge in edges]
-
-        QUERY = """
-        query ($projectId: ID!, $manual: [String!]) {
-            searchRecords(projectId: $projectId, manual: $manual) {
-                data
-                    labelAssociations {
-                    edges {
-                        node {
-                            label {
-                                name
-                            }
-                            source
-                        }
-                    }
-                }
-            }
-        }
-
-        """
-
-        variables = {"projectId": project_id, "manual": manual}
-
-        super().__init__(QUERY, variables, session_token)
-        self.data = self.execute()
-
-
-class CreateLabelingFunction(GraphQLRequest):
+class PostLabelingFunction(PostRequest):
     def __init__(self, project_id, name, function, description, session_token):
-        QUERY = """
-        mutation (
-            $projectId: ID!, 
-            $name: String!, 
-            $function: String!, 
-            $description: String!
-        ) {
-            createLabelingFunction(
-                projectId: $projectId, 
-                name: $name, 
-                function: 
-                $function, 
-                description: $description
-            ) {
-                labelingFunction {
-                    id
-                }
-            }
-        }
-        """
 
-        variables = {
-            "projectId": project_id,
+        body = {
+            "project_id": project_id,
             "name": name,
             "function": function,
             "description": description,
         }
 
-        super().__init__(QUERY, variables, session_token)
+        super().__init__(settings.get_post_lf_url(), body, session_token)
         _ = self.execute()
+
+
+class PostProjectExists(PostRequest):
+    def __init__(self, project_id, session_token):
+
+        body = {
+            "project_id": project_id,
+        }
+
+        super().__init__(settings.get_project_exists_url(), body, session_token)
+        self.exists = self.execute()["exists"]
+
+
+class PostManuallyLabeledRecords(PostRequest):
+    def __init__(self, project_id, session_token):
+
+        body = {
+            "project_id": project_id,
+        }
+
+        super().__init__(settings.get_manually_labeled_data_url(), body, session_token)
+        self.records = self.execute()["records"]

@@ -25,5 +25,13 @@ def get_authentication_url():
     return f"{get_base_url()}/.ory/kratos/public/self-service/login/api"
 
 
-def graphql():
-    return f"{get_base_url()}/graphql/"
+def get_project_exists_url():
+    return f"{get_base_url()}/project_exists"
+
+
+def get_post_lf_url():
+    return f"{get_base_url()}/labelfunction"
+
+
+def get_manually_labeled_data_url():
+    return f"{get_base_url()}/manually_labeled_data"

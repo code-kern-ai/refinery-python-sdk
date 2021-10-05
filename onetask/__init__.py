@@ -2,6 +2,7 @@
 
 from typing import Callable
 from wasabi import msg
+import pandas as pd
 from onetask import api_calls, settings, util, auto_lf
 
 
@@ -16,20 +17,17 @@ class Client:
         self.project_id = project_id
         if self.session_token is not None:
             msg.good("Logged in to system.")
-            if not api_calls.ProjectByProjectId(
-                self.project_id, self.session_token
-            ).exists:
+            if not api_calls.PostProjectExists(project_id, self.session_token).exists:
                 msg.fail(f"Project with ID {self.project_id} does not exist.")
         else:
             msg.fail("Could not log in. Please check your username and password.")
 
     def manually_labeled_records(self, as_df: bool = True):
-        fetched_records = api_calls.ManuallyLabeledRecords(
+        records = api_calls.PostManuallyLabeledRecords(
             self.project_id, self.session_token
-        ).data
-        records = util.unpack_records(fetched_records)
+        ).records
         if as_df and len(records) > 0:
-            return util.records_to_df(records)
+            return pd.DataFrame(records)
         else:
             return records
 
@@ -49,7 +47,7 @@ class Client:
         project_id, name, source_code, docs = util.unpack_python_function(
             lf, self.project_id
         )
-        api_calls.CreateLabelingFunction(
+        api_calls.PostLabelingFunction(
             project_id, name, source_code, docs, self.session_token
         )
         msg.good(f"Registered labeling function '{name}'.")

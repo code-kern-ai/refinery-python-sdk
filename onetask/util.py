@@ -2,41 +2,7 @@
 import inspect
 from typing import Callable
 import re
-import json
 from onetask import exceptions
-import pandas as pd
-
-
-def unpack_records(fetched_records):
-    records = []
-    fetched_records = fetched_records["data"]["searchRecords"]
-    if len(fetched_records) > 0:
-        for record in fetched_records:
-            record_data = json.loads(record["data"])
-            record_manual_labels = []
-            edges = record["labelAssociations"]["edges"]
-            for edge in edges:
-                node = edge["node"]
-                if node["source"] == "manual":
-                    record_manual_labels.append(node["label"]["name"])
-            records.append(
-                {
-                    "data": record_data,
-                    "manual_labels": record_manual_labels[
-                        0
-                    ],  # remove [0] for multilabel support
-                }
-            )
-        return records
-    else:
-        return []
-
-
-def records_to_df(records):
-    raw_df = pd.DataFrame(records)
-    df = raw_df["data"].apply(pd.Series)
-    df["label"] = raw_df["manual_labels"]
-    return df
 
 
 def unpack_python_function(fn: Callable, project_id: str):
