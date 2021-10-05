@@ -75,13 +75,16 @@ class PostRequest:
 
 
 class PostLabelingFunction(PostRequest):
-    def __init__(self, project_id, name, function, description, session_token):
+    def __init__(
+        self, project_id, name, function, description, autoexecute, session_token
+    ):
 
         body = {
             "project_id": project_id,
             "name": name,
             "function": function,
             "description": description,
+            "autoexecute": autoexecute,
         }
 
         super().__init__(settings.get_post_lf_url(), body, session_token)
