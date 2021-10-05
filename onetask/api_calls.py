@@ -88,7 +88,7 @@ class PostLabelingFunction(PostRequest):
         }
 
         super().__init__(settings.get_post_lf_url(), body, session_token)
-        _ = self.execute()
+        self.already_exists = self.execute()["already_exists"]
 
 
 class PostProjectExists(PostRequest):

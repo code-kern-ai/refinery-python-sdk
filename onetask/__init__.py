@@ -26,10 +26,14 @@ class Client:
         project_id, name, source_code, docs = util.unpack_python_function(
             lf, self.project_id
         )
-        api_calls.PostLabelingFunction(
+        if api_calls.PostLabelingFunction(
             project_id, name, source_code, docs, autoexecute, self.session_token
-        )
-        msg.good(f"Registered labeling function '{name}'.")
+        ).already_exists:
+            msg.warn(
+                f"Labeling function '{name}' already exists. It has not been entered again!"
+            )
+        else:
+            msg.good(f"Registered labeling function '{name}'.")
 
     def manually_labeled_records(self, as_df: bool = True):
         records = api_calls.PostManuallyLabeledRecords(
