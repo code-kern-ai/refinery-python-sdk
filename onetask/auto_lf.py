@@ -4,10 +4,11 @@ from collections import Counter
 import re
 from collections import defaultdict
 import numpy as np
+import pandas as pd
 from wasabi import msg
 
 
-def derive_regex_candidates(nlp, df, attribute, most_common=10):
+def derive_regex_candidates(nlp, df, attribute, filter_stopwords):
     if len(df) < 100:
         msg.warn(
             "Only very few records to analyze; it's best to continue labeling further records before analysis"
@@ -20,7 +21,10 @@ def derive_regex_candidates(nlp, df, attribute, most_common=10):
             return token.text
 
     def is_relevant_token(token):
-        return not (token.is_punct or token.is_stop or token.is_bracket)
+        conditions = [token.is_punct, token.is_bracket, len(token.text) == 1]
+        if filter_stopwords:
+            conditions.append(token.is_stop)
+        return not any(conditions)
 
     candidates = []
     for text in tqdm(df[attribute], total=len(df)):
@@ -47,10 +51,19 @@ def derive_regex_candidates(nlp, df, attribute, most_common=10):
                     suffix = "$" if token.idx == len(doc) - 1 else " "
                     candidate = f"{prefix}{normalize_token(token)}{suffix}"
                     candidates.append(candidate)
-    return [regex for regex, _ in Counter(candidates).most_common(most_common)]
+    return [regex for regex, _ in Counter(candidates).most_common(100)]
 
 
-def create_regex_fns(df, candidates, regex_col, label_col="manual_label"):
+def create_regex_fns(
+    df, candidates, regex_col, min_precision, label_col="manual_label"
+):
+    n = len(df)
+
+    def calc_min_cov(x):
+        return 0.5 / (x ** 0.5)
+
+    min_coverage = calc_min_cov(n)
+
     def regex_explainer(regex, attribute):
         description = ""
         terms = regex.replace("^", "").replace("$", "").split(".*?")
@@ -75,7 +88,7 @@ def create_regex_fns(df, candidates, regex_col, label_col="manual_label"):
             )
             if len(terms) > 1:
                 for term in terms[1:]:
-                    description += f" followed by term '{term}'"
+                    description += f" (in-)directly followed by term '{term}'"
         if "[0-9]" in regex:
             description += ", where [0-9] is an arbitrary number"
         description += "."
@@ -95,6 +108,7 @@ client.register_lf(regex_{iteration})
         return source_code.strip()
 
     regex_nr = 1
+    rows = []
     for regex in candidates:
         labels = defaultdict(int)
         for text, label in zip(df[regex_col], df[label_col]):
@@ -109,9 +123,18 @@ client.register_lf(regex_{iteration})
                     regex_prediction = prediction
             precision = np.round(labels[regex_prediction] / coverage, 2)
             coverage = np.round(coverage / len(df), 2)
-            if precision > 0.75 and coverage >= 0.01:
+            if precision >= min_precision and coverage >= min_coverage:
                 lf = build_regex_lf(regex, regex_col, regex_prediction, regex_nr)
                 regex_nr += 1
-                print(f"# Cov:\t{coverage}\tPrec:{precision}")
-                print(lf)
-                print()
+                rows.append(
+                    {
+                        "est_coverage": coverage,
+                        "est_precision": precision,
+                        "label": regex_prediction,
+                        "code": lf,
+                    }
+                )
+    lf_df = pd.DataFrame(rows)
+    lf_df["priority"] = (lf_df["est_coverage"] ** 2) * lf_df["est_precision"]
+    lf_df = lf_df.sort_values(by="priority", ascending=False)
+    return lf_df
