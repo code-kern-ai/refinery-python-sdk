@@ -60,7 +60,7 @@ def create_regex_fns(
     n = len(df)
 
     def calc_min_cov(x):
-        return 0.5 / (x ** 0.5)
+        return 0.3 / (x ** 0.5)
 
     min_coverage = calc_min_cov(n)
 
@@ -94,12 +94,17 @@ def create_regex_fns(
         description += "."
         return description
 
-    def build_regex_lf(regex, attribute, prediction, iteration):
+    def build_regex_lf(regex, attribute, prediction, iteration, escape_regex):
+
+        if escape_regex:
+            _regex = f"re.escape('{regex}')"
+        else:
+            _regex = f"r'{regex}'"
         source_code = f"""
 def regex_{iteration}(record):
     '''{regex_explainer(regex, attribute)}'''
     import re
-    if re.search(r'{regex}', record['{attribute}'].lower()):
+    if re.search({_regex}, record['{attribute}'].lower()):
         return '{prediction}'
 
 client.register_lf(regex_{iteration})
@@ -111,9 +116,15 @@ client.register_lf(regex_{iteration})
     rows = []
     for regex in candidates:
         labels = defaultdict(int)
+        escape_regex = False
         for text, label in zip(df[regex_col], df[label_col]):
-            if re.search(regex, text.lower()):
-                labels[label] += 1
+            try:
+                if re.search(regex, text.lower()):
+                    labels[label] += 1
+            except:  # there is sadly no better way (I know of) to handle this other than using a plain except
+                escape_regex = True
+                if re.search(re.escape(regex), text.lower()):
+                    labels[label] += 1
         coverage = sum(labels.values())
         if coverage > 0:
             regex_prediction, max_count = None, 0
@@ -124,7 +135,9 @@ client.register_lf(regex_{iteration})
             precision = np.round(labels[regex_prediction] / coverage, 2)
             coverage = np.round(coverage / len(df), 2)
             if precision >= min_precision and coverage >= min_coverage:
-                lf = build_regex_lf(regex, regex_col, regex_prediction, regex_nr)
+                lf = build_regex_lf(
+                    regex, regex_col, regex_prediction, regex_nr, escape_regex
+                )
                 regex_nr += 1
                 rows.append(
                     {
