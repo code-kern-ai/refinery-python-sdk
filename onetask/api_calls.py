@@ -36,6 +36,36 @@ def create_session_token(user_name: str, password: str):
     return session_token
 
 
+def build_headers(session_token):
+    return {
+        "Content-Type": "application/json",
+        "User-Agent": f"python-sdk-{version}",
+        "Authorization": f"Bearer {session_token}",
+    }
+
+
+def handle_response(response):
+    status_code = response.status_code
+    if status_code == 200:
+        json_data = response.json()
+        return json_data
+    else:
+        try:
+            json_data = response.json()
+            error_code = json_data.get("error_code")
+            error_message = json_data.get("error_message")
+        except JSONDecodeError:
+            error_code = 500
+            error_message = "The server was unable to process the provided data."
+
+        exception = exceptions.get_api_exception_class(
+            status_code=status_code,
+            error_code=error_code,
+            error_message=error_message,
+        )
+        raise exception
+
+
 class PostRequest:
     def __init__(self, url, body, session_token):
         self.url = url
@@ -43,35 +73,20 @@ class PostRequest:
         self.session_token = session_token
 
     def execute(self):
+        response = requests.post(
+            url=self.url, json=self.body, headers=build_headers(self.session_token)
+        )
+        return handle_response(response)
 
-        headers = {
-            "Content-Type": "application/json",
-            "User-Agent": f"python-sdk-{version}",
-            "Authorization": f"Bearer {self.session_token}",
-        }
 
-        response = requests.post(url=self.url, json=self.body, headers=headers)
+class GetRequest:
+    def __init__(self, url, session_token):
+        self.url = url
+        self.session_token = session_token
 
-        status_code = response.status_code
-
-        if status_code == 200:
-            json_data = response.json()
-            return json_data
-        else:
-            try:
-                json_data = response.json()
-                error_code = json_data.get("error_code")
-                error_message = json_data.get("error_message")
-            except JSONDecodeError:
-                error_code = 500
-                error_message = "The server was unable to process the provided data."
-
-            exception = exceptions.get_api_exception_class(
-                status_code=status_code,
-                error_code=error_code,
-                error_message=error_message,
-            )
-            raise exception
+    def execute(self):
+        response = requests.get(url=self.url, headers=build_headers(self.session_token))
+        return handle_response(response)
 
 
 class PostLabelingFunction(PostRequest):
@@ -91,23 +106,15 @@ class PostLabelingFunction(PostRequest):
         self.already_exists = self.execute()["already_exists"]
 
 
-class PostProjectExists(PostRequest):
+class GetProjectExists(GetRequest):
     def __init__(self, project_id, session_token):
-
-        body = {
-            "project_id": project_id,
-        }
-
-        super().__init__(settings.get_project_exists_url(), body, session_token)
-        self.exists = self.execute()["exists"]
+        super().__init__(settings.get_project_url(project_id), session_token)
+        self.exists = self.execute()
 
 
-class PostManuallyLabeledRecords(PostRequest):
+class GetManuallyLabeledRecords(GetRequest):
     def __init__(self, project_id, session_token):
-
-        body = {
-            "project_id": project_id,
-        }
-
-        super().__init__(settings.get_manually_labeled_data_url(), body, session_token)
-        self.records = self.execute()["records"]
+        super().__init__(
+            settings.get_manually_labeled_data_url(project_id), session_token
+        )
+        self.records = self.execute()

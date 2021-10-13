@@ -17,7 +17,7 @@ class Client:
         self.project_id = project_id
         if self.session_token is not None:
             msg.good("Logged in to system.")
-            if not api_calls.PostProjectExists(project_id, self.session_token).exists:
+            if not api_calls.GetProjectExists(project_id, self.session_token).exists:
                 msg.fail(f"Project with ID {self.project_id} does not exist.")
         else:
             msg.fail("Could not log in. Please check your username and password.")
@@ -35,19 +35,22 @@ class Client:
         else:
             msg.good(f"Registered labeling function '{name}'.")
 
-    def manually_labeled_records(self, as_df: bool = True):
-        records = api_calls.PostManuallyLabeledRecords(
+    def get_manually_labeled_records(self):
+        records = api_calls.GetManuallyLabeledRecords(
             self.project_id, self.session_token
         ).records
-        if as_df and len(records) > 0:
-            return pd.DataFrame(records)
+        fetched_df = pd.DataFrame(records)
+        if len(fetched_df) > 0:
+            df = fetched_df["data"].apply(pd.Series)
+            df["label"] = fetched_df["label"]
+            return df
         else:
-            return records
+            return fetched_df  # empty df
 
     def autogenerate_regex_labeling_functions(
         self, nlp, attribute, min_precision=0.8, filter_stopwords=False
     ):
-        records = self.manually_labeled_records(as_df=True)
+        records = self.get_manually_labeled_records()
         if len(records) > 0:
             candidates = auto_lf.derive_regex_candidates(
                 nlp, records, attribute, filter_stopwords

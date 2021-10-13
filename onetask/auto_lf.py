@@ -54,9 +54,7 @@ def derive_regex_candidates(nlp, df, attribute, filter_stopwords):
     return [regex for regex, _ in Counter(candidates).most_common(100)]
 
 
-def create_regex_fns(
-    df, candidates, regex_col, min_precision, label_col="manual_label"
-):
+def create_regex_fns(df, candidates, regex_col, min_precision, label_col="label"):
     n = len(df)
 
     def calc_min_cov(x):
