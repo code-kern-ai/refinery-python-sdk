@@ -112,9 +112,16 @@ class GetProjectExists(GetRequest):
         self.exists = self.execute()
 
 
-class GetManuallyLabeledRecords(GetRequest):
+class GetUniqueAttributes(GetRequest):
     def __init__(self, project_id, session_token):
+        super().__init__(settings.get_schema_url(project_id), session_token)
+        self.attributes = self.execute()
+
+
+class GetRecords(GetRequest):
+    def __init__(self, project_id, session_token, manually_labeled):
         super().__init__(
-            settings.get_manually_labeled_data_url(project_id), session_token
+            settings.get_data_url(project_id, manually_labeled),
+            session_token,
         )
         self.records = self.execute()

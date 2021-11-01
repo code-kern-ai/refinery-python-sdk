@@ -33,5 +33,12 @@ def get_post_lf_url():
     return f"{get_base_url()}/labelfunction"
 
 
-def get_manually_labeled_data_url(project_id):
-    return f"{get_project_url(project_id)}/data?labelled=manual"
+def get_schema_url(project_id):
+    return f"{get_project_url(project_id)}/schema"
+
+
+def get_data_url(project_id, manually_labeled):
+    url = f"{get_project_url(project_id)}/data"
+    if manually_labeled:
+        url = f"{url}?labelled=manual"
+    return url

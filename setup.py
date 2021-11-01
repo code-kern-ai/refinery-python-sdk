@@ -10,7 +10,7 @@ with open(os.path.join(this_directory, "README.md")) as file:
 
 setup(
     name="onetask",
-    version="0.1.13",
+    version="0.1.14",
     author="onetask",
     author_email="info@onetask.ai",
     description="Official Python SDK for the onetask API",
@@ -26,6 +26,12 @@ setup(
     package_dir={"": "."},
     packages=find_packages("."),
     install_requires=[
+        "transformers==4.12.2",
+        "torch==1.10.0",
+        "torchvision==0.11.1",
+        "torchaudio==0.10.0",
+        "nltk==3.6.5",
+        "scikit-learn==1.0.1",
         "certifi==2021.5.30",
         "spacy==3.1.3",
         "pandas==1.3.3",
