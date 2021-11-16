@@ -1,29 +1,32 @@
+# -*- coding: utf-8 -*-
 from abc import ABC, abstractmethod
-from transformers import AutoTokenizer, AutoModel
-import torch
-import nltk
-from nltk.tokenize import sent_tokenize
+from sentence_transformers import SentenceTransformer, models
+from torch import nn
+import numpy as np
 from wasabi import msg
 from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.preprocessing import OneHotEncoder
+from transformers import logging
+
+logging.set_verbosity_error()
 
 
-def get_fitted_model_by_config_string(data_type, config_string, records):
-    if data_type == "str":
-        if config_string == "boc":
-            return BoCEmbedder(records)
-        elif config_string == "bow":
-            return BoWEmbedder(records)
-        elif config_string == "tfidf":
-            raise NotImplementedError("TFIDF is not implemented yet")
-        else:
-            try:
-                return BERTEmbedder(records, config_string)
-            except:
-                msg.fail(
-                    f"Embedding '{config_string}' is unknown. Please check https://onetask.readme.io/ for more information"
-                )
+def get_fitted_model_by_config_string(config_string, records):
+    if config_string == "identity":
+        return IdentityEmbedder(records)
+    elif config_string == "boc":
+        return BoCEmbedder(records)
+    elif config_string == "bow":
+        return BoWEmbedder(records)
+    elif config_string == "onehot":
+        return OneHotEmbedder(records)
     else:
-        msg.fail(f"Currently unsupported data type {data_type} of attribute.")
+        try:
+            return DocumentEmbedder(records, config_string)
+        except:
+            msg.fail(
+                f"Embedding '{config_string}' is unknown. Please check https://onetask.readme.io/ for more information"
+            )
 
 
 class Embedder(ABC):
@@ -37,6 +40,17 @@ class Embedder(ABC):
     @abstractmethod
     def fit(self, records):
         pass
+
+
+class IdentityEmbedder(Embedder):
+    def __init__(self, records):
+        super().__init__(records)
+
+    def fit(self, records):
+        pass
+
+    def encode(self, document):
+        return np.array([document])
 
 
 class BoCEmbedder(Embedder):
@@ -63,39 +77,37 @@ class BoWEmbedder(Embedder):
         return self.model.transform([document]).toarray()[0]
 
 
-class BERTEmbedder(Embedder):
-    def __init__(self, records, configuration_string: str = "bert-base-uncased"):
-        self.tokenizer = AutoTokenizer.from_pretrained(configuration_string)
-        self.model = AutoModel.from_pretrained(
-            configuration_string, output_hidden_states=True
-        )
-        self.model.eval()
+class OneHotEmbedder(Embedder):
+    def __init__(self, records):
+        self.model = OneHotEncoder()
         super().__init__(records)
-        nltk.download("punkt")
+
+    def fit(self, records):
+        self.model.fit(records.reshape(-1, 1))
+
+    def encode(self, document):
+        return self.model.transform([[document]]).toarray()[0]
+
+
+class DocumentEmbedder(Embedder):
+    def __init__(self, records, configuration_string: str = "distilbert-base-uncased"):
+        word_embedding_model = models.Transformer(configuration_string)
+        pooling_model = models.Pooling(
+            word_embedding_model.get_word_embedding_dimension()
+        )
+        dense_model = models.Dense(
+            in_features=pooling_model.get_sentence_embedding_dimension(),
+            out_features=256,
+            activation_function=nn.Tanh(),
+        )
+
+        self.model = SentenceTransformer(
+            modules=[word_embedding_model, pooling_model, dense_model]
+        )
+        super().__init__(records)
 
     def fit(self, records):
         pass
 
     def encode(self, document: str):
-        embeddings = []
-        for sentence in sent_tokenize(document):
-            encoded_dict = self.tokenizer.encode_plus(
-                sentence, return_tensors="pt", max_length=512, truncation=True
-            )
-            with torch.no_grad():
-                outputs = self.model(**encoded_dict)
-            embedding = self.mean_pooling(outputs, encoded_dict["attention_mask"])
-            embeddings.append(embedding)
-        embedding_output = torch.mean(torch.stack(embeddings), axis=0)
-        return embedding_output.cpu().numpy()[0]
-
-    def mean_pooling(self, model_output, attention_mask):
-        token_embeddings = model_output[
-            0
-        ]  # First element of model_output contains all token embeddings
-        input_mask_expanded = (
-            attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
-        )
-        sum_embeddings = torch.sum(token_embeddings * input_mask_expanded, 1)
-        sum_mask = torch.clamp(input_mask_expanded.sum(1), min=1e-9)
-        return sum_embeddings / sum_mask
+        return self.model.encode(document)

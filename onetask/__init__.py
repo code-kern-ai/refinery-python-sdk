@@ -7,11 +7,14 @@ import numpy as np
 from tqdm import tqdm
 import json
 from onetask import api_calls, settings, util, auto_lf, embedding
+import numpy as np
+from bertopic import BERTopic
+from collections import defaultdict
 
 
 class Client:
     def __init__(
-        self, user_name: str, password: str, project_id: str, stage: str = "prod"
+        self, user_name: str, password: str, project_id: str, stage: str = "beta"
     ):
         settings.set_stage(stage)
         self.session_token = api_calls.create_session_token(
@@ -24,6 +27,12 @@ class Client:
                 msg.fail(f"Project with ID {self.project_id} does not exist.")
         else:
             msg.fail("Could not log in. Please check your username and password.")
+
+    def _get_unique_attributes(self):
+        attributes = api_calls.GetUniqueAttributes(
+            self.project_id, self.session_token
+        ).attributes
+        return attributes
 
     def register_lf(self, lf: Callable, autoexecute: bool = True) -> None:
         project_id, name, source_code, docs = util.unpack_python_function(
@@ -38,13 +47,7 @@ class Client:
         else:
             msg.good(f"Registered labeling function '{name}'.")
 
-    def get_attributes(self):
-        attributes = api_calls.GetUniqueAttributes(
-            self.project_id, self.session_token
-        ).attributes
-        return attributes
-
-    def get_records(self, manually_labeled=True):
+    def get_records(self, manually_labeled=True) -> pd.DataFrame:
         records = api_calls.GetRecords(
             self.project_id, self.session_token, manually_labeled=manually_labeled
         ).records
@@ -52,11 +55,88 @@ class Client:
         fetched_df = pd.DataFrame(records)
         if len(fetched_df) > 0:
             df = fetched_df["data"].apply(pd.Series)
-            if manually_labeled:
-                df["label"] = fetched_df["label"]
+            df["label"] = fetched_df["label"]
             return df
         else:
+            msg.warn("Empty result")
             return fetched_df  # empty df
+
+    def get_embeddings(self, config_string):
+        embeddings = api_calls.GetEmbeddings(
+            self.project_id, self.session_token, config_string
+        ).embeddings
+
+        fetched_embeddings = pd.DataFrame(embeddings)
+        if len(fetched_embeddings) > 0:
+            df = fetched_embeddings["data"].apply(pd.Series)
+            df[config_string] = fetched_embeddings["embedding"]
+            return df
+        else:
+            msg.warn("Empty result")
+            return fetched_embeddings
+
+    def generate_embeddings(self, attribute_configs_dict, file_path=None):
+        if not file_path:
+            file_path = f"embeddings_{self.project_id}.json"
+
+        msg.info("Loading schema")
+        attributes = self._get_unique_attributes()
+        unique_attribute = None
+        for attr in attributes:
+            if attr["unique"]:
+                unique_attribute = attr["name"]
+
+        embedding_name = "-".join(list(attribute_configs_dict.values()))
+
+        if unique_attribute:
+            msg.info("Loading records")
+            records = self.get_records(manually_labeled=False)
+            embedding_concat = defaultdict(list)
+            for attribute, config_string in attribute_configs_dict.items():
+                vals = np.stack(records[attribute])
+                records_subset = records[[unique_attribute, attribute]].to_dict(
+                    orient="records"
+                )
+                msg.info(f"Loading embedding model {config_string} for {attribute}")
+                model = embedding.get_fitted_model_by_config_string(config_string, vals)
+                if model:
+                    msg.info("Starting embedding procedure")
+                    for idx, row in tqdm(
+                        enumerate(records_subset),
+                        total=len(records_subset),
+                        desc="Embedding records...",
+                    ):
+                        embedding_concat[idx].extend(
+                            model.encode(row[attribute]).tolist()
+                        )
+            msg.good(f"Finished embedding procedure. Storing to {file_path}")
+            export = []
+            for unique_val, embedding_vector in embedding_concat.items():
+                export.append(
+                    {unique_attribute: unique_val, embedding_name: embedding_vector}
+                )
+            with open(file_path, "w") as file:
+                json.dump(export, file)
+        else:
+            msg.fail(
+                "Currently, you must have exactly one unique attribute for embedding generation. Please validate this in the web app under 'Settings'"
+            )
+
+    def model_topics(self, attribute, config_string):
+        msg.info("Loading embeddings")
+        embeddings_df = self.get_embeddings(config_string)
+        if len(embeddings_df) > 0:
+            docs = embeddings_df[attribute].tolist()
+            embeddings = np.stack(embeddings_df[config_string])
+
+            msg.info("Fitting Topic Model")
+            model = BERTopic(verbose=True, n_gram_range=[1, 2], top_n_words=30)
+            model.fit(docs, embeddings)
+            msg.good("Finished training")
+            msg.info(
+                "Further docs: https://maartengr.github.io/BERTopic/tutorial/visualization/visualization.html"
+            )
+            return model
 
     def generate_regex_labeling_functions(
         self, nlp, attribute, min_precision=0.8, filter_stopwords=False
@@ -71,45 +151,6 @@ class Client:
             )
         else:
             msg.fail("No manually labeled records available!")
-
-    def generate_embeddings(self, attribute, config_string):
-        msg.info("Loading schema")
-        attributes = self.get_attributes()
-        unique_attribute = None
-        data_type = None
-        for attr in attributes:
-            if attr["unique"]:
-                unique_attribute = attr["name"]
-            if attr["name"] == attribute:
-                data_type = attr["data_type"]
-
-        if unique_attribute:
-            msg.info("Loading records")
-            records = self.get_records(manually_labeled=False)
-            docs = np.stack(records[attribute])
-            export = records[[unique_attribute, attribute]].to_dict(orient="records")
-            msg.info("Loading embedding model")
-            model = embedding.get_fitted_model_by_config_string(
-                data_type, config_string, docs
-            )
-            if model:
-                msg.info("Starting embedding procedure")
-                for idx, row in tqdm(
-                    enumerate(export), total=len(export), desc="Embedding records..."
-                ):
-                    row[config_string] = model.encode(row[attribute]).tolist()
-                    del row[attribute]
-                    export[idx] = row
-                msg.good("Finished embedding procedure")
-                file_path = (
-                    f"embeddings_{attribute}_{config_string}_{self.project_id}.json"
-                )
-                with open(file_path, "w") as file:
-                    json.dump(export, file)
-        else:
-            msg.fail(
-                "Currently, you must have exactly one unique attribute for embedding generation. Please validate this in the web app under 'Settings'"
-            )
 
     def display_generated_labeling_functions(
         self, lf_df: pd.DataFrame, label: Optional[str] = None

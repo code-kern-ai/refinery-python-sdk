@@ -125,3 +125,12 @@ class GetRecords(GetRequest):
             session_token,
         )
         self.records = self.execute()
+
+
+class GetEmbeddings(GetRequest):
+    def __init__(self, project_id, session_token, config_string):
+        super().__init__(
+            settings.get_embeddings_url(project_id, config_string),
+            session_token,
+        )
+        self.embeddings = self.execute()
