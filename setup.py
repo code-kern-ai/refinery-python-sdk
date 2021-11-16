@@ -19,7 +19,7 @@ setup(
     url="https://github.com/onetask-ai/onetask-python",
     keywords=["onetask", "machine learning", "supervised learning", "python"],
     classifiers=[
-        "Development Status :: 3 - Beta",
+        "Development Status :: 3 - Alpha",
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
     ],
