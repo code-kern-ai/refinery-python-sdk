@@ -2,7 +2,7 @@
 
 # onetask API for Python
 
-Official Python SDK for onetask.
+This is the official Python SDK for onetask, your IDE for programmatic data labeling.
 
 ## Installation
 
