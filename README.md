@@ -18,7 +18,7 @@ Alternatively, you can clone the repository and run the setup.py script:
 
 The SDK currently offers the following functions:
 - registering local Python functions as labeling functions in our system (you can of course also develop such functions within our web system)
-- generating embeddings for your attributes, e.g. free texts or structured data containing categories and numbers
+- _experimental_: generating embeddings for your attributes, e.g. free texts or structured data containing categories and numbers
 - _experimental_: autogenerating labeling functions from manually labeled records in your project
 - _experimental_: topic modeling using BERT embeddings that you have registered in your project
 
@@ -71,7 +71,7 @@ client.register_lf(my_labeling_function)
 
 The labeling function is then automatically executed once registered, where you can always change and re-run it.
 
-### Generating embeddings
+### Generating embeddings (experimental)
 
 One of the main features of onetask is to apply both Weak Supervision and Active Learning jointly. To build the best possible Active Learning Weak Sources, you can generate embeddings for your attributes using the SDK. To do so, you have to first upload your data in our web application and select a unique attribute (see our [documentation](https://onetask.readme.io/reference/create-your-project) for further reference on how to set this up).
 
@@ -108,9 +108,44 @@ The following configuration strings are available to configure how your attribut
 | onehot               | category (low-entropy string) | one-hot encodes attribute                                                                    |
 | bow                  | string                        | Bag of Words transformation                                                                  |
 | boc                  | string                        | Bag of Characters transformation                                                             |
-| _huggingface_        | string                        | Huggingface-based transformation. You can use any available huggingface configuration string |
+| _huggingface_        | string                        | Huggingface-based transformation. You can use any available [huggingface](https://huggingface.co/) configuration string |
 
 If you want to embed multiple attributes (which makes sense e.g. when you have structured data), you can provide multiple key/value pairs in your input dictionary. The resulting embeddings will be concatenated into one vector.
 
-### Outlook
+
+### Autogenerating labeling functions (experimental)
+
+As you manually label data, onetask can help you to analyze both the explicitic and implicit data patterns. Our first approach for explicit pattern detection is to find regular expressions in free text attributes you provide. They are being mined using linguistic analysis, therefore you need to provide a spacy nlp object for the respective language of your free text.
+
+If you have an english free text, you can implement the mining as follows:
+```python
+import spacy # you need to also download the en_core_web_sm file using $ python -m spacy download en_core_web_sm
+
+nlp = spacy.load("en_core_web_sm")
+lf_df = client.generate_regex_labeling_functions(nlp, "headline")
+```
+
+This creates a DataFrame containing mined regular expressions. You can display them in a convenient way:
+
+```python
+client.display_generated_labeling_functions(lf_df)
+```
+
+**Caution**: The quality and quantity of mined regular expressions heavily depends on how much data you have labeled and how diverse your dataset is. We have tested the feature on various datasets and found it to be very helpful. If you have problems autogenerating labeling functions in your project, contact us.
+
+
+### Topic Modeling using BERT embeddings (experimental)
+
+As onetask lets you put insights of explorative analysis into programmatic data labeling, we also provide topic modeling. We use the [BERTopic](https://github.com/MaartenGr/BERTopic) library for topic modeling, and provide an easy access to your projects data and embeddings. Once you uploaded BERT embeddings to your project (such that can be created using a huggingface configuration string), you can create a topic model:
+
+```python
+topic_model = client.model_topics("headline", "distilbert-base-uncased")
+```
+
+The `topic_model` provides various methods to explore the different keywords and topics. You can also find further documentation [here](https://maartengr.github.io/BERTopic/api/bertopic.html).
+
+## Outlook and Feature Requests
 In the near future, we'll extend the Python SDK to include programmatic imports and exports, data access, and many more. If you have any requests, feel free to [contact us](https://www.onetask.ai/contact-us).
+
+## Support
+If you need help, feel free to join our Slack Community channel. It is currently only available via invitation.
