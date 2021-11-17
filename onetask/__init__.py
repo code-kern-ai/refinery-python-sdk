@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from typing import Callable, Optional
+from typing import Callable, Dict, List, Optional
 from wasabi import msg
 import pandas as pd
 import numpy as np
@@ -13,6 +13,15 @@ from collections import defaultdict
 
 
 class Client:
+    """
+    Python Client for the onetask API. If you have any questions, please contact our support.
+
+    Args:
+        user_name (str): The email with which you've been registered at onetask
+        password (str): Your password for onetask
+        project_id (str): The unique identifier for a project, can be found in the url after projects/
+        stage (str): The onetask system staging environment [beta, test, dev, local]
+    """
     def __init__(
         self, user_name: str, password: str, project_id: str, stage: str = "beta"
     ):
@@ -28,13 +37,26 @@ class Client:
         else:
             msg.fail("Could not log in. Please check your username and password.")
 
-    def _get_unique_attributes(self):
+    def _get_unique_attributes(self) -> List[Dict[str, np.union1d[str, bool]]]:
+        """
+        Get the record schema for your project shown in the web app under 'Settings'
+
+        Returns:
+            List[Dict[str, np.union1d[str, bool]]]: each record schema element
+        """
         attributes = api_calls.GetUniqueAttributes(
             self.project_id, self.session_token
         ).attributes
         return attributes
 
     def register_lf(self, lf: Callable, autoexecute: bool = True) -> None:
+        """
+        Send a local labeling function to the onetask application. Please make sure that the function fits the desired structure (for more information, please visit onetask.readme.io/reference)
+
+        Args:
+            lf (Callable): The function object you want to send to the system
+            autoexecute (bool, optional): If true, the function is automatically executed when entered in the system. Defaults to True.
+        """
         project_id, name, source_code, docs = util.unpack_python_function(
             lf, self.project_id
         )
@@ -48,6 +70,15 @@ class Client:
             msg.good(f"Registered labeling function '{name}'.")
 
     def get_records(self, manually_labeled=True) -> pd.DataFrame:
+        """
+        Get the records of your project.
+
+        Args:
+            manually_labeled (bool, optional): If true, only manually labeled records are returned. Defaults to True.
+
+        Returns:
+            pd.DataFrame: containing the record attributes and the labels
+        """
         records = api_calls.GetRecords(
             self.project_id, self.session_token, manually_labeled=manually_labeled
         ).records
@@ -61,7 +92,16 @@ class Client:
             msg.warn("Empty result")
             return fetched_df  # empty df
 
-    def get_embeddings(self, config_string):
+    def get_embeddings(self, config_string: str) -> pd.DataFrame:
+        """
+        Get the embeddings of your project of a configuration string
+
+        Args:
+            config_string (str): The name of your embedding
+
+        Returns:
+            pd.DataFrame: containing the record attributes and the embedding vectors
+        """
         embeddings = api_calls.GetEmbeddings(
             self.project_id, self.session_token, config_string
         ).embeddings
@@ -75,7 +115,16 @@ class Client:
             msg.warn("Empty result")
             return fetched_embeddings
 
-    def generate_embeddings(self, attribute_configs_dict, file_path=None):
+    def generate_embeddings(self, attribute_configs_dict: Dict[str, str], file_path: Optional[str]=None) -> None:
+        """
+        ---EXPERIMENTAL---
+        
+        Create new embeddings to upload into your project.
+
+        Args:
+            attribute_configs_dict (Dict[str, str]): describe which attribute should be embedded using which technique or model.
+            file_path (Optional[str], optional): path where the embeddings should be stored to. Defaults to 'embeddings_{project_id}.json'.
+        """
         if not file_path:
             file_path = f"embeddings_{self.project_id}.json"
 
@@ -122,7 +171,19 @@ class Client:
                 "Currently, you must have exactly one unique attribute for embedding generation. Please validate this in the web app under 'Settings'"
             )
 
-    def model_topics(self, attribute, config_string):
+    def model_topics(self, attribute: str, config_string: str) -> BERTopic:
+        """
+        ---EXPERIMENTAL---
+
+        Apply a BERTopic to your data to do topic modelling. Further docs: https://maartengr.github.io/BERTopic/tutorial/visualization/visualization.html
+
+        Args:
+            attribute (str): the name of the string attribute you want to model
+            config_string (str): name of the embedding vector in the web application that you want to make use of. This MUST be a BERT-related embedding to work properly.
+
+        Returns:
+            BERTopic: BERTopic object that can be called for topic modelling
+        """
         msg.info("Loading embeddings")
         embeddings_df = self.get_embeddings(config_string)
         if len(embeddings_df) > 0:
@@ -139,8 +200,22 @@ class Client:
             return model
 
     def generate_regex_labeling_functions(
-        self, nlp, attribute, min_precision=0.8, filter_stopwords=False
-    ):
+        self, nlp, attribute: str, min_precision:Optional[float]=0.8, filter_stopwords:Optional[bool]=False
+    ) -> pd.DataFrame:
+        """
+        ---EXPERIMENTAL---
+        
+        Autogenerate labeling functions containing regular expressions to model your data. Uses spacy to model the linguistics of your data.
+
+        Args:
+            nlp (spacy.lang): nlp object of spacy for the specific language (e.g. en_core_web_sm)
+            attribute (str): the name of the attribute that should be analyzed for regular expressions
+            min_precision (Optional[float], optional): needed precision to generate a labeling function. Defaults to 0.8.
+            filter_stopwords (Optional[bool], optional): if set to true, stop words like 'this', 'that' etc. will be removed. Defaults to False.
+
+        Returns:
+            pd.DataFrame: [description]
+        """
         records = self.get_records()
         if len(records) > 0:
             candidates = auto_lf.derive_regex_candidates(
@@ -155,6 +230,13 @@ class Client:
     def display_generated_labeling_functions(
         self, lf_df: pd.DataFrame, label: Optional[str] = None
     ):
+        """
+        Helper function to display the autogenerated labeling functions
+
+        Args:
+            lf_df (pd.DataFrame): outcome of client.generate_regex_labeling_functions
+            label (Optional[str], optional): filter option to only show one label. Defaults to None.
+        """
         if label is not None:
             lf_df = lf_df.loc[lf_df["label"] == label]
         for _, row in lf_df.iterrows():
