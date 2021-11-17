@@ -119,7 +119,9 @@ As you manually label data, onetask can help you to analyze both the explicitic 
 
 If you have an english free text, you can implement the mining as follows:
 ```python
-import spacy # you need to also download the en_core_web_sm file using $ python -m spacy download en_core_web_sm
+import spacy 
+# you need to also download the en_core_web_sm file 
+# using $ python -m spacy download en_core_web_sm
 
 nlp = spacy.load("en_core_web_sm")
 lf_df = client.generate_regex_labeling_functions(nlp, "headline")
