@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Dict, List, Optional, Union
 from wasabi import msg
 import pandas as pd
 import numpy as np
@@ -37,12 +37,12 @@ class Client:
         else:
             msg.fail("Could not log in. Please check your username and password.")
 
-    def _get_unique_attributes(self) -> List[Dict[str, np.union1d[str, bool]]]:
+    def _get_unique_attributes(self) -> List[Dict[str, Union[str, bool]]]:
         """
         Get the record schema for your project shown in the web app under 'Settings'
 
         Returns:
-            List[Dict[str, np.union1d[str, bool]]]: each record schema element
+            List[Dict[str, Union[str, bool]]]: each record schema element
         """
         attributes = api_calls.GetUniqueAttributes(
             self.project_id, self.session_token
