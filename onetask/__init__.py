@@ -22,6 +22,7 @@ class Client:
         project_id (str): The unique identifier for a project, can be found in the url after projects/
         stage (str): The onetask system staging environment [beta, test, dev, local]
     """
+
     def __init__(
         self, user_name: str, password: str, project_id: str, stage: str = "beta"
     ):
@@ -115,10 +116,12 @@ class Client:
             msg.warn("Empty result")
             return fetched_embeddings
 
-    def generate_embeddings(self, attribute_configs_dict: Dict[str, str], file_path: Optional[str]=None) -> None:
+    def generate_embeddings(
+        self, attribute_configs_dict: Dict[str, str], file_path: Optional[str] = None
+    ) -> None:
         """
         ---EXPERIMENTAL---
-        
+
         Create new embeddings to upload into your project.
 
         Args:
@@ -150,12 +153,12 @@ class Client:
                 model = embedding.get_fitted_model_by_config_string(config_string, vals)
                 if model:
                     msg.info("Starting embedding procedure")
-                    for idx, row in tqdm(
+                    for _, row in tqdm(
                         enumerate(records_subset),
                         total=len(records_subset),
                         desc="Embedding records...",
                     ):
-                        embedding_concat[idx].extend(
+                        embedding_concat[row[unique_attribute]].extend(
                             model.encode(row[attribute]).tolist()
                         )
             msg.good(f"Finished embedding procedure. Storing to {file_path}")
@@ -200,11 +203,15 @@ class Client:
             return model
 
     def generate_regex_labeling_functions(
-        self, nlp, attribute: str, min_precision:Optional[float]=0.8, filter_stopwords:Optional[bool]=False
+        self,
+        nlp,
+        attribute: str,
+        min_precision: Optional[float] = 0.8,
+        filter_stopwords: Optional[bool] = False,
     ) -> pd.DataFrame:
         """
         ---EXPERIMENTAL---
-        
+
         Autogenerate labeling functions containing regular expressions to model your data. Uses spacy to model the linguistics of your data.
 
         Args:

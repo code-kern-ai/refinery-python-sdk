@@ -10,7 +10,7 @@ with open(os.path.join(this_directory, "README.md")) as file:
 
 setup(
     name="onetask",
-    version="0.2.2",
+    version="0.2.3",
     author="onetask",
     author_email="info@onetask.ai",
     description="Official Python SDK for the onetask API",
@@ -118,6 +118,6 @@ setup(
         "wcwidth==0.2.5",
         "webencodings==0.5.1",
         "widgetsnbextension==3.5.2",
-        "zipp==3.6.0"
+        "zipp==3.6.0",
     ],
 )
