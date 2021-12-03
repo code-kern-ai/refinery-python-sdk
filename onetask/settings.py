@@ -41,8 +41,5 @@ def get_embeddings_url(project_id, config_string):
     return f"{get_project_url(project_id)}/embeddings/{config_string}"
 
 
-def get_data_url(project_id, manually_labeled):
-    url = f"{get_project_url(project_id)}/data"
-    if manually_labeled:
-        url = f"{url}?labelled=manual"
-    return url
+def get_data_url(project_id, keep_unlabeled, keep_programmatic):
+    return f"{get_project_url(project_id)}/data?keep_unlabeled={keep_unlabeled}&keep_programmatic={keep_programmatic}"

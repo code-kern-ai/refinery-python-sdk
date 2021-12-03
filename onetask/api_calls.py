@@ -119,9 +119,9 @@ class GetUniqueAttributes(GetRequest):
 
 
 class GetRecords(GetRequest):
-    def __init__(self, project_id, session_token, manually_labeled):
+    def __init__(self, project_id, session_token, keep_unlabeled, keep_programmatic):
         super().__init__(
-            settings.get_data_url(project_id, manually_labeled),
+            settings.get_data_url(project_id, keep_unlabeled, keep_programmatic),
             session_token,
         )
         self.records = self.execute()

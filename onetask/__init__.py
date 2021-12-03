@@ -70,24 +70,30 @@ class Client:
         else:
             msg.good(f"Registered labeling function '{name}'.")
 
-    def get_records(self, manually_labeled=True) -> pd.DataFrame:
+    def get_records(self, keep_unlabeled=False, keep_programmatic=False):
         """
         Get the records of your project.
 
+
         Args:
-            manually_labeled (bool, optional): If true, only manually labeled records are returned. Defaults to True.
+            keep_unlabeled (bool, optional): If true, you will receive all records, even if they are not labeled yet. Defaults to False.
+            keep_programmatic (bool, optional): if true, you will receive also the programmatically labeled records. Defaults to False.
 
         Returns:
-            pd.DataFrame: containing the record attributes and the labels
+            [type]: [description]
         """
         records = api_calls.GetRecords(
-            self.project_id, self.session_token, manually_labeled=manually_labeled
+            self.project_id,
+            self.session_token,
+            keep_unlabeled=keep_unlabeled,
+            keep_programmatic=keep_programmatic,
         ).records
 
         fetched_df = pd.DataFrame(records)
         if len(fetched_df) > 0:
             df = fetched_df["data"].apply(pd.Series)
             df["label"] = fetched_df["label"]
+            df["is_programmatic"] = fetched_df["is_programmatic"]
             return df
         else:
             msg.warn("Empty result")
