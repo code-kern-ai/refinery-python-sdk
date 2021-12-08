@@ -148,7 +148,7 @@ class Client:
 
         if unique_attribute:
             msg.info("Loading records")
-            records = self.get_records(manually_labeled=False)
+            records = self.get_records(keep_programmatic=False, keep_unlabeled=False)
             embedding_concat = defaultdict(list)
             for attribute, config_string in attribute_configs_dict.items():
                 vals = np.stack(records[attribute])
