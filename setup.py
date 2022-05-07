@@ -5,33 +5,43 @@ import os
 from setuptools import setup, find_packages
 
 this_directory = os.path.abspath(os.path.dirname(__file__))
-with open(os.path.join(this_directory, 'README.md')) as file:
+with open(os.path.join(this_directory, "README.md")) as file:
     long_description = file.read()
 
 setup(
-    name='onetask',
-    version='0.0.4',
-    author='onetask',
-    author_email='info@onetask.ai',
-    description='Official Python SDK for the onetask API',
+    name="kern-python-client",
+    version="0.0.1",
+    author="jhoetter",
+    author_email="johannes.hoetter@kern.ai",
+    description="Official Python SDK for the Kern AI API",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url='https://github.com/onetask-ai/onetask-python',
-    keywords=['onetask', 'machine learning', 'supervised learning', 'python'],
+    url="https://github.com/code-kern-ai/kern-python",
+    keywords=["kern", "machine learning", "supervised learning", "python"],
     classifiers=[
-        'Development Status :: 3 - Alpha',
-        'Programming Language :: Python :: 3',
-        'License :: OSI Approved :: MIT License',
+        "Development Status :: 3 - Alpha",
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: MIT License",
     ],
-    package_dir={'': '.'},
-    packages=find_packages('.'),
+    package_dir={"": "."},
+    packages=find_packages("."),
     install_requires=[
-        'better-abc==0.0.3',
-        'certifi==2021.5.30',
-        'chardet==4.0.0',
-        'idna==2.10',
-        'requests==2.25.1',
-        'urllib3==1.26.5',
-        'wasabi==0.8.2'
+        "certifi==2021.10.8",
+        "charset-normalizer==2.0.12",
+        "click==8.1.3",
+        "idna==3.3",
+        "numpy==1.22.3",
+        "pandas==1.4.2",
+        "pathspec==0.9.0",
+        "platformdirs==2.5.2",
+        "python-dateutil==2.8.2",
+        "pytz==2022.1",
+        "requests==2.27.1",
+        "six==1.16.0",
+        "tinycss2==1.1.1",
+        "tomli==2.0.1",
+        "typing_extensions==4.2.0",
+        "urllib3==1.26.9",
+        "wasabi==0.9.1",
     ],
 )
