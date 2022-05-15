@@ -7,7 +7,7 @@ This is the official Python SDK for Kern AI, your IDE for programmatic data enri
 
 ## Installation
 
-You can set up this library via either running `$ pip install kern-python-client`, or via cloning this repository and running `$ pip install -r requirements.txt` in your repository.
+You can set up this library via either running `$ pip install kern-sdk`, or via cloning this repository and running `$ pip install -r requirements.txt` in your repository.
 
 ## Usage
 Once you installed the package, you can access the application from any Python terminal as follows:
@@ -23,6 +23,8 @@ client = Client(username, password, project_id)
 # if you run the application locally, please the following instead:
 # client = Client(username, password, project_id, uri="http://localhost:4455")
 ```
+
+Alternatively, you can also set up a `secrets.json` file and load it via `Client.from_secrets_file`. If you use a `secrets.json`, you can also use the CLI commands directly (e.g. `kern pull`).
 
 Now, you can easily fetch the data from your project:
 ```python
