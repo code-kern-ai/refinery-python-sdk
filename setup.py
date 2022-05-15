@@ -9,11 +9,11 @@ with open(os.path.join(this_directory, "README.md")) as file:
     long_description = file.read()
 
 setup(
-    name="kern-python-client",
+    name="kern-sdk",
     version="0.0.1",
     author="jhoetter",
     author_email="johannes.hoetter@kern.ai",
-    description="Official Python SDK for the Kern AI API",
+    description="Official SDK for the Kern AI API",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/code-kern-ai/kern-python",
@@ -44,4 +44,9 @@ setup(
         "urllib3==1.26.9",
         "wasabi==0.9.1",
     ],
+    entry_points={
+        "console_scripts": [
+            "kern=cli:main",
+        ],
+    },
 )
