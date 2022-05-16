@@ -17,9 +17,9 @@ def post_request(url: str, body: Dict[str, Any], session_token: str) -> str:
     return _handle_response(response)
 
 
-def get_request(url: str, session_token: str) -> str:
+def get_request(url: str, session_token: str, **query_params) -> str:
     headers = _build_headers(session_token)
-    response = requests.get(url=url, headers=headers)
+    response = requests.get(url=url, headers=headers, params=query_params)
     return _handle_response(response)
 
 
@@ -28,6 +28,7 @@ def _build_headers(session_token: str) -> Dict[str, str]:
         "Content-Type": "application/json",
         "User-Agent": f"python-sdk-{version}",
         "Authorization": f"Bearer {session_token}",
+        "Identifier": session_token,
     }
 
 

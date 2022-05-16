@@ -64,8 +64,10 @@ class Client:
         Returns:
             pd.DataFrame: DataFrame containing your record data. For more details, see https://docs.kern.ai
         """
-        url = settings.get_export_url(self.project_id, num_samples=num_samples)
-        api_response = api_calls.get_request(url, self.session_token)
+        url = settings.get_export_url(self.project_id)
+        api_response = api_calls.get_request(
+            url, self.session_token, **{"num_samples": num_samples}
+        )
         df = pd.read_json(api_response)
         if download_to is not None:
             df.to_json(download_to, orient="records")

@@ -28,7 +28,9 @@ def get_project_url(project_id: str):
     return f"{BASE_URI}/api/project/{project_id}"
 
 
-def get_export_url(project_id: str, **kwargs) -> str:
-    url = f"{get_project_url(project_id)}/export"
-    url = add_query_params(url, **kwargs)
-    return url
+def get_records_url(project_id: str):
+    return f"{get_project_url(project_id)}/records"
+
+
+def get_export_url(project_id: str) -> str:
+    return f"{get_project_url(project_id)}/export"
