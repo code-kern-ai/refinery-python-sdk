@@ -6,7 +6,7 @@ def pull():
     client = Client.from_secrets_file("secrets.json")
     project_name = client.get_project_details()["name"]
     download_to = f"{project_name}.json"
-    client.fetch_export(download_to=download_to)
+    client.get_record_export(download_to=download_to)
 
 
 def main():

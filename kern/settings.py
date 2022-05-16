@@ -24,6 +24,10 @@ def get_authentication_url() -> str:
     return f"{BASE_URI}/.ory/kratos/public/self-service/login/api"
 
 
+def get_config_url():
+    return f"{BASE_URI}/api/config/"
+
+
 def get_project_url(project_id: str):
     return f"{BASE_URI}/api/project/{project_id}"
 
@@ -34,3 +38,7 @@ def get_records_url(project_id: str):
 
 def get_export_url(project_id: str) -> str:
     return f"{get_project_url(project_id)}/export"
+
+
+def get_import_url(project_id: str) -> str:
+    return f"{get_project_url(project_id)}/import"

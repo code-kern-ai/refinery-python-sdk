@@ -5,6 +5,7 @@ import pandas as pd
 from kern import authentication, api_calls, settings, exceptions
 from typing import Optional
 import json
+from minio import Minio
 
 
 class Client:
@@ -53,7 +54,7 @@ class Client:
         api_response = api_calls.get_request(url, self.session_token)
         return api_response
 
-    def fetch_export(
+    def get_record_export(
         self, num_samples: Optional[int] = None, download_to: Optional[str] = None
     ) -> pd.DataFrame:
         """Collects the export data of your project (i.e. the same data if you would export in the web app).
@@ -73,3 +74,39 @@ class Client:
             df.to_json(download_to, orient="records")
             msg.good(f"Downloaded export to {download_to}")
         return df
+
+    def post_file_import(self, upload_from: str):
+        upload_from = f"{upload_from}_SCALE"
+        file_type = "records"
+        import_file_options = None
+        config_url = settings.get_config_url()
+        config_api_response = api_calls.get_request(config_url, self.session_token)
+        endpoint = config_api_response["KERN_S3_ENDPOINT"].replace("http://", "")
+
+        import_url = settings.get_import_url(self.project_id)
+        import_api_response = api_calls.post_request(
+            import_url,
+            {
+                "file_name": upload_from,
+                "file_type": file_type,
+                "import_file_options": import_file_options,
+            },
+            self.session_token,
+        )
+
+        credentials = import_api_response["Credentials"]
+        access_key = credentials["AccessKeyId"]
+        secret_key = credentials["SecretAccessKey"]
+        session_token = credentials["SessionToken"]
+
+        upload_task_id = import_api_response["uploadTaskId"]
+
+        minio = Minio(
+            endpoint,
+            access_key=access_key,
+            secret_key=secret_key,
+            session_token=session_token,
+        )
+
+        return minio
+        # return endpoint, access_key, secret_key, session_token, upload_task_id

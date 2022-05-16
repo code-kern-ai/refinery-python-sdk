@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import json
 from json.decoder import JSONDecodeError
 import pkg_resources
 from kern import exceptions
@@ -36,6 +37,8 @@ def _handle_response(response: requests.Response) -> str:
     status_code = response.status_code
     if status_code == 200:
         json_data = response.json()
+        if type(json_data) == str:
+            json_data = json.loads(json_data)
         return json_data
     else:
         try:
