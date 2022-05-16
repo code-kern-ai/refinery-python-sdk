@@ -8,7 +8,7 @@ This is the official Python SDK for Kern AI, your IDE for programmatic data enri
 
 ## Installation
 
-You can set up this library via either running `$ pip install kern-python-client`, or via cloning this repository and running `$ pip install -r requirements.txt` in your repository.
+You can set up this library via either running `$ pip install kern-sdk`, or via cloning this repository and running `$ pip install -r requirements.txt` in your repository.
 
 ## Usage
 Once you installed the package, you can access the application from any Python terminal as follows:

@@ -6,7 +6,7 @@ import requests
 from typing import Any, Dict
 
 try:
-    version = pkg_resources.get_distribution("kern-python-client").version
+    version = pkg_resources.get_distribution("kern-sdk").version
 except pkg_resources.DistributionNotFound:
     version = "noversion"
 
@@ -25,10 +25,10 @@ def get_request(url: str, session_token: str, **query_params) -> str:
 
 def _build_headers(session_token: str) -> Dict[str, str]:
     return {
-        "Content-Type": "application/json",
-        "User-Agent": f"python-sdk-{version}",
-        "Authorization": f"Bearer {session_token}",
-        "Identifier": session_token,
+        "content-type": "application/json",
+        "user-agent": f"python-sdk-{version}",
+        "authorization": f"Bearer {session_token}",
+        "identifier": session_token,
     }
 
 

@@ -10,7 +10,7 @@ with open(os.path.join(this_directory, "README.md")) as file:
 
 setup(
     name="kern-sdk",
-    version="0.0.1",
+    version="0.0.2",
     author="jhoetter",
     author_email="johannes.hoetter@kern.ai",
     description="Official SDK for the Kern AI API",
