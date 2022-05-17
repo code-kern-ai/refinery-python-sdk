@@ -5,7 +5,6 @@ import pandas as pd
 from kern import authentication, api_calls, settings, exceptions
 from typing import Optional
 import json
-from minio import Minio
 
 
 class Client:
@@ -81,7 +80,7 @@ class Client:
         import_file_options = None
         config_url = settings.get_config_url()
         config_api_response = api_calls.get_request(config_url, self.session_token)
-        endpoint = config_api_response["KERN_S3_ENDPOINT"].replace("http://", "")
+        endpoint = config_api_response["KERN_S3_ENDPOINT"]
 
         import_url = settings.get_import_url(self.project_id)
         import_api_response = api_calls.post_request(
@@ -100,13 +99,4 @@ class Client:
         session_token = credentials["SessionToken"]
 
         upload_task_id = import_api_response["uploadTaskId"]
-
-        minio = Minio(
-            endpoint,
-            access_key=access_key,
-            secret_key=secret_key,
-            session_token=session_token,
-        )
-
-        return minio
-        # return endpoint, access_key, secret_key, session_token, upload_task_id
+        return endpoint, access_key, secret_key, session_token, upload_task_id
