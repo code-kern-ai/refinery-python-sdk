@@ -21,9 +21,9 @@ password = "your-password"
 project_id = "your-project-id" # can be found in the URL of the web application
 
 client = Client(username, password, project_id)
-# if you run the application locally, please the following instead:
-# client = Client(username, password, project_id, uri="http://localhost:4455")
 ```
+
+**Caution:** if you run the application locally, please the following instead: `client = Client(username, password, project_id, uri="http://localhost:4455")`
 
 Alternatively, you can provide a `secrets.json` file in your repository, looking as follows:
 ```json
@@ -40,7 +40,7 @@ Now, you can easily fetch the data from your project:
 df = client.get_record_export()
 ```
 
-Alternatively, you can also just run `kern pull` in your CLI given that you have provided the `secrets.json` file.
+Alternatively, you can also just run `kern pull` in your CLI given that you have provided the `secrets.json` file. This will download the current data and stores it in a `.json`-file with your project name as its file name.
 
 The `df` contains data of the following scheme:
 - all your record attributes are stored as columns, e.g. `headline` or `running_id` if you uploaded records like `{"headline": "some text", "running_id": 1234}`
@@ -52,7 +52,7 @@ The `df` contains data of the following scheme:
 With the `client`, you easily integrate your data into any kind of system; may it be a custom implementation, an AutoML system or a plain data analytics framework 🚀
 
 ## Roadmap
-- [ ] Register information sources via wrappers
+- [ ] Register heuristics via wrappers
 - [ ] Add project upload
 - [x] Fetch project statistics
 
