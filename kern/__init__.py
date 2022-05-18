@@ -73,7 +73,7 @@ class Client:
         api_response = api_calls.get_request(
             url, self.session_token, **{"num_samples": num_samples}
         )
-        df = pd.read_json(api_response)
+        df = pd.DataFrame(api_response)
         if download_to is not None:
             df.to_json(download_to, orient="records")
             msg.good(f"Downloaded export to {download_to}")
