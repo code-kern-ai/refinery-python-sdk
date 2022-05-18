@@ -1,6 +1,6 @@
 ![kern-python](https://uploads-ssl.webflow.com/61e47fafb12bd56b40022a49/62766400bd3c57b579d289bf_kern-python%20Banner.png)
 [![Python 3.9](https://img.shields.io/badge/python-3.9-blue.svg)](https://www.python.org/downloads/release/python-390/)
-[![pypi 0.0.3](https://img.shields.io/badge/pypi-0.0.3-yellow.svg)](https://pypi.org/project/kern-sdk/0.0.3/)
+[![pypi 0.0.4](https://img.shields.io/badge/pypi-0.0.4-yellow.svg)](https://pypi.org/project/kern-sdk/0.0.4/)
 
 # Kern AI API for Python
 
