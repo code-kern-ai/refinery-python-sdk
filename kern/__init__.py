@@ -3,7 +3,7 @@
 from wasabi import msg
 import pandas as pd
 from kern import authentication, api_calls, settings, exceptions
-from typing import Optional
+from typing import Optional, Dict
 import json
 
 
@@ -35,7 +35,7 @@ class Client:
         self.project_id = project_id
 
     @classmethod
-    def from_secrets_file(cls, path_to_file):
+    def from_secrets_file(cls, path_to_file: str):
         with open(path_to_file, "r") as file:
             content = json.load(file)
         uri = content.get("uri")
@@ -48,7 +48,12 @@ class Client:
             uri=uri,
         )
 
-    def get_project_details(self):
+    def get_project_details(self) -> Dict[str, str]:
+        """Collect high-level information about your project: name, description, and tokenizer
+
+        Returns:
+            Dict[str, str]: dictionary containing the above information
+        """
         url = settings.get_project_url(self.project_id)
         api_response = api_calls.get_request(url, self.session_token)
         return api_response
@@ -62,7 +67,7 @@ class Client:
             num_samples (Optional[int], optional): If set, only the first `num_samples` records are collected. Defaults to None.
 
         Returns:
-            pd.DataFrame: DataFrame containing your record data. For more details, see https://docs.kern.ai
+            pd.DataFrame: DataFrame containing your record data.
         """
         url = settings.get_export_url(self.project_id)
         api_response = api_calls.get_request(
@@ -74,29 +79,30 @@ class Client:
             msg.good(f"Downloaded export to {download_to}")
         return df
 
-    def post_file_import(self, upload_from: str):
-        upload_from = f"{upload_from}_SCALE"
-        file_type = "records"
-        import_file_options = None
-        config_url = settings.get_config_url()
-        config_api_response = api_calls.get_request(config_url, self.session_token)
-        endpoint = config_api_response["KERN_S3_ENDPOINT"]
+    # TODO: issue #6
+    # def post_file_import(self, upload_from: str):
+    #     upload_from = f"{upload_from}_SCALE"
+    #     file_type = "records"
+    #     import_file_options = None
+    #     config_url = settings.get_config_url()
+    #     config_api_response = api_calls.get_request(config_url, self.session_token)
+    #     endpoint = config_api_response["KERN_S3_ENDPOINT"]
 
-        import_url = settings.get_import_url(self.project_id)
-        import_api_response = api_calls.post_request(
-            import_url,
-            {
-                "file_name": upload_from,
-                "file_type": file_type,
-                "import_file_options": import_file_options,
-            },
-            self.session_token,
-        )
+    #     import_url = settings.get_import_url(self.project_id)
+    #     import_api_response = api_calls.post_request(
+    #         import_url,
+    #         {
+    #             "file_name": upload_from,
+    #             "file_type": file_type,
+    #             "import_file_options": import_file_options,
+    #         },
+    #         self.session_token,
+    #     )
 
-        credentials = import_api_response["Credentials"]
-        access_key = credentials["AccessKeyId"]
-        secret_key = credentials["SecretAccessKey"]
-        session_token = credentials["SessionToken"]
+    #     credentials = import_api_response["Credentials"]
+    #     access_key = credentials["AccessKeyId"]
+    #     secret_key = credentials["SecretAccessKey"]
+    #     session_token = credentials["SessionToken"]
 
-        upload_task_id = import_api_response["uploadTaskId"]
-        return endpoint, access_key, secret_key, session_token, upload_task_id
+    #     upload_task_id = import_api_response["uploadTaskId"]
+    #     return endpoint, access_key, secret_key, session_token, upload_task_id
