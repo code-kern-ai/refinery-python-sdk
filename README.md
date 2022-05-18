@@ -1,5 +1,6 @@
 ![kern-python](https://uploads-ssl.webflow.com/61e47fafb12bd56b40022a49/62766400bd3c57b579d289bf_kern-python%20Banner.png)
 [![Python 3.9](https://img.shields.io/badge/python-3.9-blue.svg)](https://www.python.org/downloads/release/python-390/)
+[![pypi 0.0.3](https://img.shields.io/badge/pypi-0.0.3-yellow.svg)](https://pypi.org/project/kern-sdk/0.0.3/)
 
 # Kern AI API for Python
 
@@ -7,7 +8,7 @@ This is the official Python SDK for Kern AI, your IDE for programmatic data enri
 
 ## Installation
 
-You can set up this library via either running `$ pip install kern-sdk`, or via cloning this repository and running `$ pip install -r requirements.txt` in your repository.
+You can set up this library via either running `$ pip install kern-sdk`, or via cloning this repository and running `$ pip install -r requirements.txt` in this repository.
 
 ## Usage
 Once you installed the package, you can access the application from any Python terminal as follows:
@@ -24,12 +25,22 @@ client = Client(username, password, project_id)
 # client = Client(username, password, project_id, uri="http://localhost:4455")
 ```
 
-Alternatively, you can also set up a `secrets.json` file and load it via `Client.from_secrets_file`. If you use a `secrets.json`, you can also use the CLI commands directly (e.g. `kern pull`).
+Alternatively, you can provide a `secrets.json` file in your repository, looking as follows:
+```json
+{
+    "user_name": "your-username",
+    "password": "your-password",
+    "project_id": "your-project-id"
+}
+```
+Again, if you run on your local machine, you should provide also `"uri": "http://localhost:4455"`.
 
 Now, you can easily fetch the data from your project:
 ```python
-df = client.fetch_export()
+df = client.get_record_export()
 ```
+
+Alternatively, you can also just run `kern pull` in your CLI given that you have provided the `secrets.json` file.
 
 The `df` contains data of the following scheme:
 - all your record attributes are stored as columns, e.g. `headline` or `running_id` if you uploaded records like `{"headline": "some text", "running_id": 1234}`
@@ -42,7 +53,8 @@ With the `client`, you easily integrate your data into any kind of system; may i
 
 ## Roadmap
 - [ ] Register information sources via wrappers
-- [ ] Fetch project statistics
+- [ ] Add project upload
+- [x] Fetch project statistics
 
 
 If you want to have something added, feel free to open an [issue](https://github.com/code-kern-ai/kern-python/issues).

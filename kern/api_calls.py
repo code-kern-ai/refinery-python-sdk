@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import json
 from json.decoder import JSONDecodeError
 import pkg_resources
 from kern import exceptions
@@ -6,7 +7,7 @@ import requests
 from typing import Any, Dict
 
 try:
-    version = pkg_resources.get_distribution("kern-python-client").version
+    version = pkg_resources.get_distribution("kern-sdk").version
 except pkg_resources.DistributionNotFound:
     version = "noversion"
 
@@ -17,17 +18,18 @@ def post_request(url: str, body: Dict[str, Any], session_token: str) -> str:
     return _handle_response(response)
 
 
-def get_request(url: str, session_token: str) -> str:
+def get_request(url: str, session_token: str, **query_params) -> str:
     headers = _build_headers(session_token)
-    response = requests.get(url=url, headers=headers)
+    response = requests.get(url=url, headers=headers, params=query_params)
     return _handle_response(response)
 
 
 def _build_headers(session_token: str) -> Dict[str, str]:
     return {
-        "Content-Type": "application/json",
-        "User-Agent": f"python-sdk-{version}",
-        "Authorization": f"Bearer {session_token}",
+        "content-type": "application/json",
+        "user-agent": f"python-sdk-{version}",
+        "authorization": f"Bearer {session_token}",
+        "identifier": session_token,
     }
 
 
@@ -35,6 +37,8 @@ def _handle_response(response: requests.Response) -> str:
     status_code = response.status_code
     if status_code == 200:
         json_data = response.json()
+        if type(json_data) == str:
+            json_data = json.loads(json_data)
         return json_data
     else:
         try:
