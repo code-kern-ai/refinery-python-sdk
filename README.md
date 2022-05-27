@@ -55,7 +55,7 @@ The `df` contains data of the following scheme:
 With the `client`, you easily integrate your data into any kind of system; may it be a custom implementation, an AutoML system or a plain data analytics framework 🚀
 
 ## Roadmap
-- [ ] Register information sources via wrappers
+- [ ] Register heuristics via wrappers
 - [ ] Add project upload
 - [x] Fetch project statistics
 
