@@ -46,7 +46,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "kern=cli:main",
+            "kern=kern.cli:main",
         ],
     },
 )

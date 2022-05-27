@@ -21,11 +21,11 @@ password = "your-password"
 project_id = "your-project-id" # can be found in the URL of the web application
 
 client = Client(username, password, project_id)
+# if you run the application locally, please use the following instead:
+# client = Client(username, password, project_id, uri="http://localhost:4455")
 ```
 
-**Caution:** if you run the application locally, please the following instead: `client = Client(username, password, project_id, uri="http://localhost:4455")`
-
-Alternatively, you can provide a `secrets.json` file in your repository, looking as follows:
+Alternatively, you can provide a `secrets.json` file in your directory where you want to run the SDK, looking as follows:
 ```json
 {
     "user_name": "your-username",
@@ -33,14 +33,17 @@ Alternatively, you can provide a `secrets.json` file in your repository, looking
     "project_id": "your-project-id"
 }
 ```
-Again, if you run on your local machine, you should provide also `"uri": "http://localhost:4455"`.
+Again, if you run on your local machine, you should also provide `"uri": "http://localhost:4455"`. Afterwards, you can access the client like this:
+```python
+client = Client.from_secrets_file("secrets.json")
+```
 
 Now, you can easily fetch the data from your project:
 ```python
 df = client.get_record_export()
 ```
 
-Alternatively, you can also just run `kern pull` in your CLI given that you have provided the `secrets.json` file. This will download the current data and stores it in a `.json`-file with your project name as its file name.
+Alternatively, you can also just run `kern pull` in your CLI given that you have provided the `secrets.json` file in the same directory.
 
 The `df` contains data of the following scheme:
 - all your record attributes are stored as columns, e.g. `headline` or `running_id` if you uploaded records like `{"headline": "some text", "running_id": 1234}`
