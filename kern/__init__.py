@@ -3,8 +3,10 @@
 from wasabi import msg
 import pandas as pd
 from kern import authentication, api_calls, settings, exceptions
-from typing import Optional, Dict
+from typing import List, Optional, Dict
 import json
+from tqdm import tqdm
+import spacy
 
 
 class Client:
@@ -58,8 +60,23 @@ class Client:
         api_response = api_calls.get_request(url, self.session_token)
         return api_response
 
+    def get_lookup_list(self, list_id: str) -> Dict[str, str]:
+        url = settings.get_lookup_list_url(self.project_id, list_id)
+        api_response = api_calls.get_request(url, self.session_token)
+        return api_response
+
+    def get_lookup_lists(self) -> List[Dict[str, str]]:
+        lookup_lists = []
+        for lookup_list_id in self.get_project_details()["knowledge_base_ids"]:
+            lookup_list = self.get_lookup_list(lookup_list_id)
+            lookup_lists.append(lookup_list)
+        return lookup_lists
+
     def get_record_export(
-        self, num_samples: Optional[int] = None, download_to: Optional[str] = None
+        self,
+        num_samples: Optional[int] = None,
+        download_to: Optional[str] = None,
+        tokenize: Optional[bool] = True,
     ) -> pd.DataFrame:
         """Collects the export data of your project (i.e. the same data if you would export in the web app).
 
@@ -74,6 +91,37 @@ class Client:
             url, self.session_token, **{"num_samples": num_samples}
         )
         df = pd.DataFrame(api_response)
+
+        if tokenize:
+            tokenize_attributes = []
+            for column in df.columns:
+                if "__confidence" in column:
+                    dtype = type(df[column].iloc[0])
+                    if dtype == list:
+                        attribute = column.split("__")[0]
+                        tokenize_attributes.append(attribute)
+
+            if len(tokenize_attributes) > 0:
+                tokenizer_package = self.get_project_details()["tokenizer"]
+                if not spacy.util.is_package(tokenizer_package):
+                    spacy.cli.download(tokenizer_package)
+
+                nlp = spacy.load(tokenizer_package)
+
+                msg.info(f"Tokenizing data with spaCy '{tokenizer_package}'.")
+                msg.info(
+                    "This will be provided from the server in future versions of Kern refinery."
+                )
+
+                tqdm.pandas(desc="Applying tokenization locally")
+                for attribute in tokenize_attributes:
+                    df[f"{attribute}__tokenized"] = df[attribute].progress_apply(
+                        lambda x: nlp(x)
+                    )
+
+            else:
+                msg.info("No tokenization necessary.")
+
         if download_to is not None:
             df.to_json(download_to, orient="records")
             msg.good(f"Downloaded export to {download_to}")
