@@ -7,8 +7,8 @@ backcall==0.2.0
 beautifulsoup4==4.11.1
 black==22.3.0
 bleach==5.0.0
-boto3==1.23.1
-botocore==1.26.1
+boto3==1.24.26
+botocore==1.27.26
 certifi==2021.10.8
 cffi==1.15.0
 charset-normalizer==2.0.12
@@ -73,6 +73,7 @@ s3transfer==0.5.2
 Send2Trash==1.8.0
 six==1.16.0
 soupsieve==2.3.2.post1
+spacy==3.3.1
 stack-data==0.2.0
 terminado==0.15.0
 tinycss2==1.1.1
