@@ -10,15 +10,20 @@ def pull():
     client.get_record_export(download_to=download_to)
 
 
+def push(file_path):
+    client = Client.from_secrets_file("secrets.json")
+    client.post_file_import(file_path)
+
+
 def help():
     msg.info(
-        "With the Kern SDK, you can type commands as `kern <command>`. Currently, we provide the following:"
+        "With the Kern refinery SDK, you can type commands as `kern <command>`. Currently, we provide the following:"
     )
     msg.info(
         "- kern pull: Download the record export of the project defined in `settings.json` to your local storage."
     )
     msg.info(
-        "- kern push <path>: Upload a record file to the project defined in `settings.json` from your local storage. Currently in development."
+        "- kern push <path>: Upload a record file to the project defined in `settings.json` from your local storage."
     )
 
 
@@ -33,7 +38,11 @@ def main():
         if command == "pull":
             pull()
         elif command == "push":
-            msg.warn("Currently in development.")
+            if len(cli_args) != 2:
+                msg.fail("Please provide a path to a file when running kern push.")
+            else:
+                file_path = cli_args[1]
+                push(file_path)
         elif command == "help":
             help()
         else:

@@ -39,6 +39,14 @@ class Client:
 
     @classmethod
     def from_secrets_file(cls, path_to_file: str):
+        """Creates a Client object from a secrets file.
+
+        Args:
+            path_to_file (str): Path to the secrets file.
+
+        Returns:
+            Client: kern.Client object.
+        """
         with open(path_to_file, "r") as file:
             content = json.load(file)
         uri = content.get("uri")
@@ -62,11 +70,24 @@ class Client:
         return api_response
 
     def get_lookup_list(self, list_id: str) -> Dict[str, str]:
+        """Fetches a lookup list of your current project.
+
+        Args:
+            list_id (str): The ID of the lookup list.
+
+        Returns:
+            Dict[str, str]: Containing the specified lookup list of your project.
+        """
         url = settings.get_lookup_list_url(self.project_id, list_id)
         api_response = api_calls.get_request(url, self.session_token)
         return api_response
 
     def get_lookup_lists(self) -> List[Dict[str, str]]:
+        """Fetches all lookup lists of your current project
+
+        Returns:
+            List[Dict[str, str]]: Containing the lookups lists of your project.
+        """
         lookup_lists = []
         for lookup_list_id in self.get_project_details()["knowledge_base_ids"]:
             lookup_list = self.get_lookup_list(lookup_list_id)
@@ -128,14 +149,29 @@ class Client:
             msg.good(f"Downloaded export to {download_to}")
         return df
 
-    def post_file_import(self, path: str) -> bool:
+    def post_file_import(
+        self, path: str, import_file_options: Optional[str] = ""
+    ) -> bool:
+        """Imports a file into your project.
+
+        Args:
+            path (str): Path to the file to import.
+            import_file_options (Optional[str], optional): Options for the Pandas import. Defaults to None.
+
+        Raises:
+            FileImportError: If the file could not be imported, an exception is raised.
+
+        Returns:
+            bool: True if the file was imported successfully, False otherwise.
+        """
         if not os.path.exists(path):
-            raise Exception(f"Given filepath is not valid. Path: {path}")
+            raise exceptions.FileImportError(
+                f"Given filepath is not valid. Path: {path}"
+            )
         last_path_part = path.split("/")[-1]
         file_name = f"{last_path_part}_SCALE"
-        file_type = "records"
-        import_file_options = ""
 
+        FILE_TYPE = "records"
         # config
         config_url = settings.get_base_config(self.project_id)
         config_api_response = api_calls.get_request(
@@ -150,7 +186,7 @@ class Client:
             credentials_url,
             {
                 "file_name": file_name,
-                "file_type": file_type,
+                "file_type": FILE_TYPE,
                 "import_file_options": import_file_options,
             },
             self.session_token,
@@ -171,4 +207,9 @@ class Client:
             path,
             file_name,
         )
-        return True if success else False
+        if success:
+            msg.good(f"Uploaded {path} to your project.")
+            return True
+        else:
+            msg.fail(f"Could not upload {path} to your project.")
+            return False
