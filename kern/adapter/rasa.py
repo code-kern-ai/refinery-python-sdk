@@ -59,11 +59,12 @@ def inject_label_in_text(row, text_name, tokenized_label_task, constant_outside)
                 else:
                     string += f"{token.text}{whitespaces}"
             else:
+                label_trimmed = label[2:]  # remove B- and I-
                 if close_multitoken_label:
-                    string += f"{token.text}]({label[2:]}){whitespaces}"
+                    string += f"{token.text}]({label_trimmed}){whitespaces}"
                     close_multitoken_label = False
                 else:
-                    string += f"[{token.text}]({label[2:]}){whitespaces}"
+                    string += f"[{token.text}]({label_trimmed}){whitespaces}"
         else:
             string += f"{token.text}{whitespaces}"
     return string
@@ -114,6 +115,29 @@ def build_intent_yaml(
                 df_sub_label[text_name].tolist()
             )
             nlu_list.append(OrderedDict(intent=label, examples=literal(literal_string)))
+
+    if tokenized_label_task is not None:
+
+        def flatten(xss):
+            return [x for xs in xss for x in xs]
+
+        labels = set(flatten(df[tokenized_label_task].tolist()))
+        lookup_list_names = []
+        for label in labels:
+            if label.startswith(CONSTANT_LABEL_BEGIN):
+                label_trimmed = label[2:]  # remove B-
+                lookup_list_names.append(label_trimmed)
+
+        for lookup_list in client.get_lookup_lists():
+            if lookup_list["name"] in lookup_list_names:
+                values = [entry["value"] for entry in lookup_list["terms"]]
+                literal_string = build_literal_from_iterable(values)
+                nlu_list.append(
+                    OrderedDict(
+                        lookup=lookup_list["name"], examples=literal(literal_string)
+                    )
+                )
+
     nlu_dict = OrderedDict(nlu=nlu_list)
 
     if dir_name is not None and not os.path.isdir(dir_name):
