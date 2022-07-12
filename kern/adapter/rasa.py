@@ -2,6 +2,10 @@ import yaml
 import os
 from collections import OrderedDict
 
+CONSTANT_OUTSIDE = "OUTSIDE"
+CONSTANT_LABEL_BEGIN = "B-"
+CONSTANT_LABEL_INTERMEDIATE = "I-"
+
 
 class literal(str):
     pass
@@ -25,15 +29,67 @@ def build_literal_from_iterable(iterable):
     return "\n".join([f"- {value}" for value in iterable]) + "\n"
 
 
+def inject_label_in_text(row, text_name, tokenized_label_task, constant_outside):
+    string = ""
+    token_list = row[f"{text_name}__tokenized"]
+
+    close_multitoken_label = False
+    multitoken_label = False
+    for idx, token in enumerate(token_list):
+
+        if idx < len(token_list) - 1:
+            token_next = token_list[idx + 1]
+            label_next = row[tokenized_label_task][idx + 1]
+            if label_next.startswith(CONSTANT_LABEL_INTERMEDIATE):
+                multitoken_label = True
+            else:
+                if multitoken_label:
+                    close_multitoken_label = True
+                multitoken_label = False
+            num_whitespaces = token_next.idx - (token.idx + len(token))
+        else:
+            num_whitespaces = 0
+        whitespaces = " " * num_whitespaces
+
+        label = row[tokenized_label_task][idx]
+        if label != constant_outside:
+            if multitoken_label:
+                if label.startswith(CONSTANT_LABEL_BEGIN):
+                    string += f"[{token.text}{whitespaces}"
+                else:
+                    string += f"{token.text}{whitespaces}"
+            else:
+                if close_multitoken_label:
+                    string += f"{token.text}]({label[2:]}){whitespaces}"
+                    close_multitoken_label = False
+                else:
+                    string += f"[{token.text}]({label[2:]}){whitespaces}"
+        else:
+            string += f"{token.text}{whitespaces}"
+    return string
+
+
 def build_intent_yaml(
     client,
     text_name,
     intent_label_task,
     metadata_label_task=None,
+    tokenized_label_task=None,
     dir_name="data",
     file_name="nlu.yml",
+    constant_outside=CONSTANT_OUTSIDE,
 ):
-    df = client.get_record_export(tokenize=False)
+    df = client.get_record_export(tokenize=(tokenized_label_task is not None))
+
+    if tokenized_label_task is not None:
+        text_name_injected = f"{text_name}__injected"
+        df[text_name_injected] = df.apply(
+            lambda x: inject_label_in_text(
+                x, text_name, tokenized_label_task, constant_outside
+            ),
+            axis=1,
+        )
+        text_name = text_name_injected
 
     nlu_list = []
     for label, df_sub_label in df.groupby(intent_label_task):
