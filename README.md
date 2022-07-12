@@ -76,10 +76,30 @@ An example export file looks like this:
 In this example, there is no manual label, but a weakly supervised label `"Negative"` has been set with 62.2% confidence.
 
 ### Fetch lookup lists
-- [ ] Todo
+In your project, you can create lookup lists to implement distant supervision heuristics. To fetch your lookup list(s), you can either get all or fetch one by its list id.
+```python
+list_id = "your-list-id"
+lookup_list = client.get_lookup_list(list_id)
+```
+
+The list id can be found in your browser URL when you're on the details page of a lookup list, e.g. when you run on localhost: `http://localhost:4455/app/projects/{project_id}/knowledge-base/{list_id}`.
+
+Alternatively, you can pull all lookup lists:
+```python
+lookup_lists = client.get_lookup_lists()
+```
 
 ### Upload files
-- [ ] Todo
+You can import files directly from your machine to your application:
+
+```python
+file_path = "my/file/path/data.json"
+upload_was_successful = client.post_file_import(file_path)
+```
+
+Alternatively, you can `kern push <path-to-your-file>` via CLI, given that you have provided the `secrets.json` file in the same directory.
+
+**Make sure that you've selected the correct project beforehand, and fit the data schema of existing records in your project!**
 
 ### Adapters
 
@@ -174,7 +194,8 @@ Let us know what open-source/closed-source NLP framework you are using, for whic
 
 ## Roadmap
 - [ ] Register heuristics via wrappers
-- [ ] Add project upload
+- [ ] Up/download zipped projects for versioning via DVC
+- [x] Add project upload
 - [x] Fetch project statistics
 
 

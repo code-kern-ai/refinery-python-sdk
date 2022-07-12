@@ -26,10 +26,14 @@ class InternalServerError(SDKError):
     pass
 
 
+class FileImportError(Exception):
+    pass
+
+
 RESPONSE_CODES_API_EXCEPTION_MAP = {
-    401: UnauthorizedError,
-    404: NotFoundError,
-    500: InternalServerError,
+    401: {"*": UnauthorizedError},
+    404: {"*": NotFoundError},
+    500: {"*": InternalServerError},
 }
 
 
