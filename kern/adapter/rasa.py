@@ -1,12 +1,8 @@
+from typing import Any, List, Optional
+import pandas as pd
 import yaml
-import os
-from collections import OrderedDict
 
-CONSTANT_OUTSIDE = "OUTSIDE"
-CONSTANT_LABEL_BEGIN = "B-"
-CONSTANT_LABEL_INTERMEDIATE = "I-"
-
-
+# https://stackoverflow.com/questions/8640959/how-can-i-control-what-scalar-form-pyyaml-uses-for-my-data
 class literal(str):
     pass
 
@@ -24,12 +20,44 @@ def ordered_dict_presenter(dumper, data):
 
 yaml.add_representer(OrderedDict, ordered_dict_presenter)
 
+import os
+from collections import OrderedDict
+from wasabi import msg
 
-def build_literal_from_iterable(iterable):
+from kern import Client
+
+CONSTANT_OUTSIDE = "OUTSIDE"
+CONSTANT_LABEL_BEGIN = "B-"
+CONSTANT_LABEL_INTERMEDIATE = "I-"
+
+
+def build_literal_from_iterable(iterable: List[Any]) -> str:
+    """Builds a Rasa-conform yaml string from an iterable.
+
+    Args:
+        iterable (List[Any]): List with values to be converted to a literal block.
+
+    Returns:
+        str: literal block
+    """
     return "\n".join([f"- {value}" for value in iterable]) + "\n"
 
 
-def inject_label_in_text(row, text_name, tokenized_label_task, constant_outside):
+def inject_label_in_text(
+    row: pd.Series, text_name: str, tokenized_label_task: str, constant_outside: str
+) -> str:
+    """Insert token labels into text.
+    E.g. "Hello, my name is Johannes Hötter" -> "Hello, my name is [Johannes Hötter](person)"
+
+    Args:
+        row (pd.Series): row of the record export dataframe
+        text_name (str): name of the text/chat field
+        tokenized_label_task (str): name of the label task containing token-level labels
+        constant_outside (str): constant to be used for outside labels
+
+    Returns:
+        str: injected text
+    """
     string = ""
     token_list = row[f"{text_name}__tokenized"]
 
@@ -71,15 +99,31 @@ def inject_label_in_text(row, text_name, tokenized_label_task, constant_outside)
 
 
 def build_intent_yaml(
-    client,
-    text_name,
-    intent_label_task,
-    metadata_label_task=None,
-    tokenized_label_task=None,
-    dir_name="data",
-    file_name="nlu.yml",
-    constant_outside=CONSTANT_OUTSIDE,
-):
+    client: Client,
+    text_name: str,
+    intent_label_task: str,
+    metadata_label_task: Optional[str] = None,
+    tokenized_label_task: Optional[str] = None,
+    dir_name: str = "data",
+    file_name: str = "nlu.yml",
+    constant_outside: str = CONSTANT_OUTSIDE,
+    version: str = "3.1",
+) -> None:
+    """builds a Rasa NLU yaml file from your project data via the client object.
+
+    Args:
+        client (Client): connected Client object for your project
+        text_name (str): name of the text/chat field
+        intent_label_task (str): name of the classification label with the intents
+        metadata_label_task (Optional[str], optional): if you have a metadata task (e.g. sentiment), you can list it here. Currently, only one is possible to provide. Defaults to None.
+        tokenized_label_task (Optional[str], optional): if you have a token-level task (e.g. for entities), you can list it here. Currently, only one is possible to provide. Defaults to None.
+        dir_name (str, optional): name of your rasa data directory. Defaults to "data".
+        file_name (str, optional): name of the file you want to store the data to. Defaults to "nlu.yml".
+        constant_outside (str, optional): constant to be used for outside labels in token-level tasks. Defaults to CONSTANT_OUTSIDE.
+        version (str, optional): Rasa version. Defaults to "3.1".
+    """
+    msg.info("Building training data for Rasa")
+    msg.warn("If you haven't done so yet, please install rasa and run `rasa init`")
     df = client.get_record_export(tokenize=(tokenized_label_task is not None))
 
     if tokenized_label_task is not None:
@@ -138,7 +182,7 @@ def build_intent_yaml(
                     )
                 )
 
-    nlu_dict = OrderedDict(nlu=nlu_list)
+    nlu_dict = OrderedDict(version=version, nlu=nlu_list)
 
     if dir_name is not None and not os.path.isdir(dir_name):
         os.mkdir(dir_name)
@@ -147,3 +191,14 @@ def build_intent_yaml(
 
     with open(file_path, "w") as f:
         yaml.dump(nlu_dict, f, allow_unicode=True)
+        msg.good(f"Saved training data to {file_path}! 🚀")
+        msg.warn(
+            f"Please make sure to add the project-specific files domain.yml, {os.path.join(dir_name, 'rules.yml')} and {os.path.join(dir_name, 'stories.yml')}."
+        )
+        msg.info("More information about these files can be found here:")
+        msg.info(" - Domain: https://rasa.com/docs/rasa/domain")
+        msg.info(" - Rules: https://rasa.com/docs/rasa/rules")
+        msg.info(" - Stories: https://rasa.com/docs/rasa/stories")
+        msg.good(
+            "You're all set, and can now start building your conversational AI via `rasa train`! 🎉"
+        )
