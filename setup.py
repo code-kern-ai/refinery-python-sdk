@@ -19,9 +19,9 @@ setup(
     url="https://github.com/code-kern-ai/kern-python",
     keywords=["kern", "machine learning", "supervised learning", "python"],
     classifiers=[
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 4 - Beta",
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: MIT License",
+        "License :: OSI Approved :: Apache Software License",
     ],
     package_dir={"": "."},
     packages=find_packages("."),
