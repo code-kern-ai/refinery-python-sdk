@@ -2,9 +2,10 @@
 
 from wasabi import msg
 import pandas as pd
-from kern import authentication, api_calls, settings, exceptions
+from kern import authentication, api_calls, settings, exceptions, util
 from typing import List, Optional, Dict
 import json
+import os.path
 from tqdm import tqdm
 import spacy
 
@@ -127,30 +128,47 @@ class Client:
             msg.good(f"Downloaded export to {download_to}")
         return df
 
-    # TODO: issue #6
-    # def post_file_import(self, upload_from: str):
-    #     upload_from = f"{upload_from}_SCALE"
-    #     file_type = "records"
-    #     import_file_options = None
-    #     config_url = settings.get_config_url()
-    #     config_api_response = api_calls.get_request(config_url, self.session_token)
-    #     endpoint = config_api_response["KERN_S3_ENDPOINT"]
+    def post_file_import(self, path: str) -> bool:
+        if not os.path.exists(path):
+            raise Exception(f"Given filepath is not valid. Path: {path}")
+        last_path_part = path.split("/")[-1]
+        file_name = f"{last_path_part}_SCALE"
+        file_type = "records"
+        import_file_options = ""
 
-    #     import_url = settings.get_import_url(self.project_id)
-    #     import_api_response = api_calls.post_request(
-    #         import_url,
-    #         {
-    #             "file_name": upload_from,
-    #             "file_type": file_type,
-    #             "import_file_options": import_file_options,
-    #         },
-    #         self.session_token,
-    #     )
+        # config
+        config_url = settings.get_base_config(self.project_id)
+        config_api_response = api_calls.get_request(
+            config_url,
+            self.session_token,
+        )
+        endpoint = config_api_response.get("KERN_S3_ENDPOINT")
 
-    #     credentials = import_api_response["Credentials"]
-    #     access_key = credentials["AccessKeyId"]
-    #     secret_key = credentials["SecretAccessKey"]
-    #     session_token = credentials["SessionToken"]
-
-    #     upload_task_id = import_api_response["uploadTaskId"]
-    #     return endpoint, access_key, secret_key, session_token, upload_task_id
+        # credentials
+        credentials_url = settings.get_import_url(self.project_id)
+        credentials_api_response = api_calls.post_request(
+            credentials_url,
+            {
+                "file_name": file_name,
+                "file_type": file_type,
+                "import_file_options": import_file_options,
+            },
+            self.session_token,
+        )
+        credentials = credentials_api_response["Credentials"]
+        access_key = credentials["AccessKeyId"]
+        secret_key = credentials["SecretAccessKey"]
+        session_token = credentials["SessionToken"]
+        upload_task_id = credentials_api_response["uploadTaskId"]
+        bucket = credentials_api_response["bucket"]
+        success = util.s3_upload(
+            access_key,
+            secret_key,
+            session_token,
+            bucket,
+            endpoint,
+            upload_task_id,
+            path,
+            file_name,
+        )
+        return True if success else False
