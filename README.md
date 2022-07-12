@@ -2,9 +2,23 @@
 [![Python 3.9](https://img.shields.io/badge/python-3.9-blue.svg)](https://www.python.org/downloads/release/python-390/)
 [![pypi 0.1.0](https://img.shields.io/badge/pypi-0.1.0-yellow.svg)](https://pypi.org/project/kern-sdk/0.1.0/)
 
-# Kern AI API for Python
 
 This is the official Python SDK for [*refinery*](https://github.com/code-kern-ai/refinery), your **open-source** data-centric IDE for NLP.
+
+**Table of Contents**
+- [Installation](#installation)
+- [Usage](#usage)
+  - [Creating a `Client` object](#creating-a-client-object)
+  - [Fetching labeled data](#fetching-labeled-data)
+  - [Fetching lookup lists](#fetching-lookup-lists)
+  - [Upload files](#upload-files)
+  - [Adapters](#adapters)
+    - [Rasa](#rasa)
+    - [What's missing?](#whats-missing)
+- [Roadmap](#roadmap)
+- [Contributing](#contributing)
+- [License](#license)
+- [Contact](#contact)
 
 ## Installation
 
@@ -75,7 +89,7 @@ An example export file looks like this:
 
 In this example, there is no manual label, but a weakly supervised label `"Negative"` has been set with 62.2% confidence.
 
-### Fetch lookup lists
+### Fetching lookup lists
 In your project, you can create lookup lists to implement distant supervision heuristics. To fetch your lookup list(s), you can either get all or fetch one by its list id.
 ```python
 list_id = "your-list-id"
@@ -188,7 +202,7 @@ nlu:
 
 Please make sure to also create the further necessary files (`domain.yml`, `data/stories.yml` and `data/rules.yml`) if you want to train your Rasa chatbot. For further reference, see their [documentation](https://rasa.com/docs/rasa).
 
-### What's missing?
+#### What's missing?
 Let us know what open-source/closed-source NLP framework you are using, for which you'd like to have an adapter implemented in the SDK. To do so, simply create an issue in this repository with the tag "enhancement".
 
 
