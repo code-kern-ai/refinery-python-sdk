@@ -1,6 +1,10 @@
+import os
+from wasabi import msg
 from typing import Any, List, Optional
 import pandas as pd
 import yaml
+from kern import Client
+from collections import OrderedDict
 
 # https://stackoverflow.com/questions/8640959/how-can-i-control-what-scalar-form-pyyaml-uses-for-my-data
 class literal(str):
@@ -19,12 +23,6 @@ def ordered_dict_presenter(dumper, data):
 
 
 yaml.add_representer(OrderedDict, ordered_dict_presenter)
-
-import os
-from collections import OrderedDict
-from wasabi import msg
-
-from kern import Client
 
 CONSTANT_OUTSIDE = "OUTSIDE"
 CONSTANT_LABEL_BEGIN = "B-"
