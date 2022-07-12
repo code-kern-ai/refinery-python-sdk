@@ -5,6 +5,7 @@ import pandas as pd
 from kern import authentication, api_calls, settings, exceptions, util
 from typing import List, Optional, Dict
 import json
+import os.path
 from tqdm import tqdm
 import spacy
 
@@ -128,6 +129,8 @@ class Client:
         return df
 
     def post_file_import(self, path: str) -> bool:
+        if not os.path.exists(path):
+            raise Exception(f"Given filepath is not valid. Path: {path}")
         last_path_part = path.split("/")[-1]
         file_name = f"{last_path_part}_SCALE"
         file_type = "records"
