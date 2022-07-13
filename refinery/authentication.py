@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from kern import settings
+from refinery import settings
 import requests
 
 

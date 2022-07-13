@@ -2,7 +2,7 @@
 
 from wasabi import msg
 import pandas as pd
-from kern import authentication, api_calls, settings, exceptions, util
+from refinery import authentication, api_calls, settings, exceptions, util
 from typing import List, Optional, Dict
 import json
 import os.path
@@ -11,7 +11,7 @@ import spacy
 
 
 class Client:
-    """Client object which can be used to directly address the Kern AI API.
+    """Client object which can be used to directly address the Kern AI refinery API.
 
     Args:
         user_name (str): Your username (email) for the application.
@@ -49,7 +49,7 @@ class Client:
             project_id (Optional[str], optional): The link to your project. This can be found in the URL in an active project. Defaults to None. In that case, it will read the project id from the file
 
         Returns:
-            kern.Client: Client object.
+            refinery.Client: Client object.
         """
         with open(path_to_file, "r") as file:
             content = json.load(file)
@@ -138,7 +138,7 @@ class Client:
 
                 msg.info(f"Tokenizing data with spaCy '{tokenizer_package}'.")
                 msg.info(
-                    "This will be provided from the server in future versions of Kern refinery."
+                    "This will be provided from the server in future versions of refinery."
                 )
 
                 tqdm.pandas(desc="Applying tokenization locally")

@@ -1,4 +1,4 @@
-from kern import Client
+from refinery import Client
 import sys
 from wasabi import msg
 
@@ -17,13 +17,13 @@ def push(file_path):
 
 def help():
     msg.info(
-        "With the Kern refinery SDK, you can type commands as `kern <command>`. Currently, we provide the following:"
+        "With the refinery SDK, you can type commands as `refinery <command>`. Currently, we provide the following:"
     )
     msg.info(
-        "- kern pull: Download the record export of the project defined in `settings.json` to your local storage."
+        "- refinery pull: Download the record export of the project defined in `settings.json` to your local storage."
     )
     msg.info(
-        "- kern push <path>: Upload a record file to the project defined in `settings.json` from your local storage."
+        "- refinery push <path>: Upload a record file to the project defined in `settings.json` from your local storage."
     )
 
 
@@ -31,7 +31,7 @@ def main():
     cli_args = sys.argv[1:]
     if len(cli_args) == 0:
         msg.fail(
-            "Please provide some arguments when running kern. Type `kern help` for some instructions."
+            "Please provide some arguments when running the `refinery` command. Type `refinery help` for some instructions."
         )
     else:
         command = cli_args[0]
@@ -39,7 +39,7 @@ def main():
             pull()
         elif command == "push":
             if len(cli_args) != 2:
-                msg.fail("Please provide a path to a file when running kern push.")
+                msg.fail("Please provide a path to a file when running refinery push.")
             else:
                 file_path = cli_args[1]
                 push(file_path)
@@ -47,5 +47,5 @@ def main():
             help()
         else:
             msg.fail(
-                f"Could not understand command `{command}`. Type `kern help` for some instructions."
+                f"Could not understand command `{command}`. Type `refinery help` for some instructions."
             )

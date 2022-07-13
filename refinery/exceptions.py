@@ -11,7 +11,7 @@ class UnknownItemError(LocalError):
 class APIError(Exception):
     def __init__(self, message: Optional[str] = None):
         if message is None:
-            message = "Please check the SDK documentation at https://github.com/code-kern-ai/kern-python"
+            message = "Please check the SDK documentation at https://github.com/code-kern-ai/refinery-python"
         super().__init__(message)
 
 

@@ -3,7 +3,7 @@ from wasabi import msg
 from typing import Any, List, Optional
 import pandas as pd
 import yaml
-from kern import Client, exceptions
+from refinery import Client, exceptions
 from collections import OrderedDict
 
 # https://stackoverflow.com/questions/8640959/how-can-i-control-what-scalar-form-pyyaml-uses-for-my-data

@@ -2,12 +2,12 @@
 import json
 from json.decoder import JSONDecodeError
 import pkg_resources
-from kern import exceptions
+from refinery import exceptions
 import requests
 from typing import Any, Dict
 
 try:
-    version = pkg_resources.get_distribution("kern-sdk").version
+    version = pkg_resources.get_distribution("refinery-python").version
 except pkg_resources.DistributionNotFound:
     version = "noversion"
 

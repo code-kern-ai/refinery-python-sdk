@@ -234,4 +234,4 @@ And please don't forget to leave a ⭐ if you like the work!
 Distributed under the MIT License. See LICENSE.txt for more information.
 
 ## Contact
-This library is developed and maintained by [kern.ai](https://github.com/code-kern-ai). If you want to provide us with feedback or have some questions, don't hesitate to contact us. We're super happy to help ✌️
+This library is developed and maintained by [Kern AI](https://github.com/code-kern-ai). If you want to provide us with feedback or have some questions, don't hesitate to contact us. We're super happy to help ✌️
