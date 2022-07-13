@@ -5,9 +5,7 @@ from typing import Optional
 class SDKError(Exception):
     def __init__(self, message: Optional[str] = None):
         if message is None:
-            message = (
-                "Please check the SDK documentation at https://docs.kern.ai/reference."
-            )
+            message = "Please check the SDK documentation at https://github.com/code-kern-ai/kern-python"
         super().__init__(message)
 
 
@@ -20,6 +18,10 @@ class UnauthorizedError(SDKError):
 class NotFoundError(SDKError):
     pass
 
+class UnknownProjectError(SDKError):
+    def __init__(self, project_id: str):
+        super().__init__(message=f"Could not find project '{project_id}'. Please check your input.")
+
 
 # 500 Server Error
 class InternalServerError(SDKError):
@@ -29,10 +31,15 @@ class InternalServerError(SDKError):
 class FileImportError(Exception):
     pass
 
+# mirror this from the rest api class ErrorCodes
+class ErrorCodes:
+    UNRECOGNIZED_USER = "UNRECOGNIZED_USER" # not actively used in SDK
+    PROJECT_NOT_FOUND = "PROJECT_NOT_FOUND"
+
 
 RESPONSE_CODES_API_EXCEPTION_MAP = {
     401: {"*": UnauthorizedError},
-    404: {"*": NotFoundError},
+    404: {"*": NotFoundError, ErrorCodes.PROJECT_NOT_FOUND: UnknownProjectError},
     500: {"*": InternalServerError},
 }
 

@@ -14,7 +14,7 @@ class Client:
     """Client object which can be used to directly address the Kern AI API.
 
     Args:
-        user_name (str): Your username for the application.
+        user_name (str): Your username (email) for the application.
         password (str): The respective password. Do not share this!
         project_id (str): The link to your project. This can be found in the URL in an active project.
         uri (str, optional): Link to the host of the application. Defaults to "https://app.kern.ai".
@@ -26,6 +26,7 @@ class Client:
     def __init__(
         self, user_name: str, password: str, project_id: str, uri=settings.DEFAULT_URI
     ):
+        msg.info(f"Connecting to {uri}")
         settings.set_base_uri(uri)
         self.session_token = authentication.create_session_token(
             user_name=user_name, password=password
@@ -37,25 +38,33 @@ class Client:
             raise exceptions.get_api_exception_class(401)
         self.project_id = project_id
 
+        self.get_project_details()
+
     @classmethod
-    def from_secrets_file(cls, path_to_file: str):
+    def from_secrets_file(cls, path_to_file: str, project_id: Optional[str] = None):
         """Creates a Client object from a secrets file.
 
         Args:
             path_to_file (str): Path to the secrets file.
+            project_id (Optional[str], optional): The link to your project. This can be found in the URL in an active project. Defaults to None. In that case, it will read the project id from the file
 
         Returns:
-            Client: kern.Client object.
+            kern.Client: Client object.
         """
         with open(path_to_file, "r") as file:
             content = json.load(file)
+
         uri = content.get("uri")
         if uri is None:
             uri = settings.DEFAULT_URI
+
+        if project_id is None:
+            project_id = content["project_id"]
+
         return cls(
             user_name=content["user_name"],
             password=content["password"],
-            project_id=content["project_id"],
+            project_id=project_id,
             uri=uri,
         )
 
@@ -116,12 +125,9 @@ class Client:
 
         if tokenize:
             tokenize_attributes = []
-            for column in df.columns:
-                if "__confidence" in column:
-                    dtype = type(df[column].iloc[0])
-                    if dtype == list:
-                        attribute = column.split("__")[0]
-                        tokenize_attributes.append(attribute)
+            for attribute in self.get_project_details()["attributes"]:
+                if attribute["data_type"] == "TEXT":
+                    tokenize_attributes.append(attribute["name"])
 
             if len(tokenize_attributes) > 0:
                 tokenizer_package = self.get_project_details()["tokenizer"]
@@ -142,7 +148,7 @@ class Client:
                     )
 
             else:
-                msg.info("No tokenization necessary.")
+                msg.warn("There are no attributes that can be tokenized in this project.")
 
         if download_to is not None:
             df.to_json(download_to, orient="records")

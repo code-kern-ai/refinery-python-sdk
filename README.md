@@ -32,7 +32,7 @@ Once you installed the package, you can create a `Client` object from any Python
 ```python
 from kern import Client
 
-user_name = "your-username"
+user_name = "your-username" # this is the email you log in with
 password = "your-password"
 project_id = "your-project-id" # can be found in the URL of the web application
 
@@ -110,6 +110,8 @@ You can import files directly from your machine to your application:
 file_path = "my/file/path/data.json"
 upload_was_successful = client.post_file_import(file_path)
 ```
+
+We use Pandas to process the data you upload, so you can also provide `import_file_options` for the file type you use. Currently, you need to provide them as a `\n`-separated string (e.g. `"quoting=1\nsep=';'"`). We'll adapt this in the future to work with dictionaries instead.
 
 Alternatively, you can `kern push <path-to-your-file>` via CLI, given that you have provided the `secrets.json` file in the same directory.
 
