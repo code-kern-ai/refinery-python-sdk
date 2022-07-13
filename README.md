@@ -1,9 +1,9 @@
-![kern-python](https://uploads-ssl.webflow.com/61e47fafb12bd56b40022a49/62766400bd3c57b579d289bf_kern-python%20Banner.png)
+![refinery SDK](https://uploads-ssl.webflow.com/61e47fafb12bd56b40022a49/62cf1c3cb8272b1e9c01127e_refinery%20sdk%20banner.png)
 [![Python 3.9](https://img.shields.io/badge/python-3.9-blue.svg)](https://www.python.org/downloads/release/python-390/)
-[![pypi 1.0.1](https://img.shields.io/badge/pypi-1.0.1-yellow.svg)](https://pypi.org/project/kern-sdk/1.0.1/)
+[![pypi 1.0.1](https://img.shields.io/badge/pypi-1.0.1-yellow.svg)](https://pypi.org/project/refinery-python/1.0.0/)
 
 
-This is the official Python SDK for [*refinery*](https://github.com/code-kern-ai/refinery), your **open-source** data-centric IDE for NLP.
+This is the official Python SDK for [*refinery*](https://github.com/code-kern-ai/refinery), the **open-source** data-centric IDE for NLP.
 
 **Table of Contents**
 - [Installation](#installation)
@@ -22,7 +22,7 @@ This is the official Python SDK for [*refinery*](https://github.com/code-kern-ai
 
 ## Installation
 
-You can set up this SDK either via running `$ pip install kern-sdk`, or by cloning this repository and running `$ pip install -r requirements.txt`.
+You can set up this SDK either via running `$ pip install refinery-python`, or by cloning this repository and running `$ pip install -r requirements.txt`.
 
 ## Usage
 
@@ -30,7 +30,7 @@ You can set up this SDK either via running `$ pip install kern-sdk`, or by cloni
 Once you installed the package, you can create a `Client` object from any Python terminal as follows:
 
 ```python
-from kern import Client
+from refinery import Client
 
 user_name = "your-username" # this is the email you log in with
 password = "your-password"
@@ -69,7 +69,7 @@ df = client.get_record_export(tokenize=False)
 # spaCy tokenizer will process your textual data
 ```
 
-Alternatively, you can also just run `kern pull` in your CLI given that you have provided the `secrets.json` file in the same directory.
+Alternatively, you can also just run `refinery pull` in your CLI given that you have provided the `secrets.json` file in the same directory.
 
 The `df` contains both your originally uploaded data (e.g. `headline` and `running_id` if you uploaded records like `{"headline": "some text", "running_id": 1234}`), and a triplet for each labeling task you create. This triplet consists of the manual labels, the weakly supervised labels, and their confidence. For extraction tasks, this data is on token-level.
 
@@ -113,7 +113,7 @@ upload_was_successful = client.post_file_import(file_path)
 
 We use Pandas to process the data you upload, so you can also provide `import_file_options` for the file type you use. Currently, you need to provide them as a `\n`-separated string (e.g. `"quoting=1\nsep=';'"`). We'll adapt this in the future to work with dictionaries instead.
 
-Alternatively, you can `kern push <path-to-your-file>` via CLI, given that you have provided the `secrets.json` file in the same directory.
+Alternatively, you can `refinery push <path-to-your-file>` via CLI, given that you have provided the `secrets.json` file in the same directory.
 
 **Make sure that you've selected the correct project beforehand, and fit the data schema of existing records in your project!**
 
@@ -125,7 +125,7 @@ Alternatively, you can `kern push <path-to-your-file>` via CLI, given that you h
 To do so, do the following:
 
 ```python
-from kern.adapter import rasa
+from refinery.adapter import rasa
 
 rasa.build_intent_yaml(
   client,
@@ -148,7 +148,7 @@ nlu:
 If you want to provide a metadata-level label (such as sentiment), you can provide the optional argument `metadata_label_task`:
 
 ```python
-from kern.adapter import rasa
+from refinery.adapter import rasa
 
 rasa.build_intent_yaml(
   client,
@@ -173,7 +173,7 @@ nlu:
 And if you have entities in your texts which you'd like to recognize, simply add the `tokenized_label_task` argument:
 
 ```python
-from kern.adapter import rasa
+from refinery.adapter import rasa
 
 rasa.build_intent_yaml(
   client,
@@ -215,7 +215,7 @@ Let us know what open-source/closed-source NLP framework you are using, for whic
 - [x] Fetch project statistics
 
 
-If you want to have something added, feel free to open an [issue](https://github.com/code-kern-ai/kern-python/issues).
+If you want to have something added, feel free to open an [issue](https://github.com/code-kern-ai/refinery-python/issues).
 
 ## Contributing
 Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
