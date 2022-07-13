@@ -3,7 +3,7 @@ from wasabi import msg
 from typing import Any, List, Optional
 import pandas as pd
 import yaml
-from kern import Client
+from kern import Client, exceptions
 from collections import OrderedDict
 
 # https://stackoverflow.com/questions/8640959/how-can-i-control-what-scalar-form-pyyaml-uses-for-my-data
@@ -119,10 +119,17 @@ def build_intent_yaml(
         file_name (str, optional): name of the file you want to store the data to. Defaults to "nlu.yml".
         constant_outside (str, optional): constant to be used for outside labels in token-level tasks. Defaults to CONSTANT_OUTSIDE.
         version (str, optional): Rasa version. Defaults to "3.1".
+
+    Raises:
+        exceptions.UnknownItemError: if the item you are looking for is not found.
     """
     msg.info("Building training data for Rasa")
     msg.warn("If you haven't done so yet, please install rasa and run `rasa init`")
     df = client.get_record_export(tokenize=(tokenized_label_task is not None))
+
+    for attribute in [text_name, intent_label_task, metadata_label_task, tokenized_label_task]:
+        if attribute is not None and attribute not in df.columns:
+            raise exceptions.UnknownItemError(f"Can't find argument '{attribute}' in the existing export schema: {df.columns.tolist()}")
 
     if tokenized_label_task is not None:
         text_name_injected = f"{text_name}__injected"
