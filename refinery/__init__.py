@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from black import Any
 from wasabi import msg
 import pandas as pd
 from refinery import authentication, api_calls, settings, exceptions, util
