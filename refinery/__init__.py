@@ -231,7 +231,7 @@ class Client:
             msg.fail(msg_text)
             raise exceptions.FileImportError(msg_text)
 
-    def __monitor_task(self, upload_task_id):
+    def __monitor_task(self, upload_task_id: str) -> None:
         do_monitoring = True
         idx = 0
         last_progress = 0.0
@@ -258,7 +258,7 @@ class Client:
                     )
                 time.sleep(0.5)
 
-    def __get_task(self, upload_task_id):
+    def __get_task(self, upload_task_id: str) -> Dict[str, Any]:
         api_response = api_calls.get_request(
             settings.get_task(self.project_id, upload_task_id), self.session_token
         )
