@@ -236,6 +236,7 @@ class Client:
         do_monitoring = True
         idx = 0
         last_progress = 0.0
+        print_success_message = False
         with tqdm(
             total=100.00,
             colour="green",
@@ -252,16 +253,17 @@ class Client:
                 pbar.update(progress)
                 pbar.set_description_str(desc=task_state, refresh=True)
                 if task_state == "DONE" or task_state == "FAILED":
-                    if task_state == "DONE":
-                        msg.good("Upload successful.")
-                    else:
-                        msg.fail("Upload failed. Please look into the UI notification center for more details.")
+                    print_success_message = task_state == "DONE"
                     do_monitoring = False
                 if idx >= 100:
                     raise exceptions.FileImportError(
                         "Timeout while upload, please check the upload progress in the UI."
                     )
                 time.sleep(0.5)
+        if print_success_message:
+            msg.good("File upload successful.")
+        else:
+            msg.fail("Upload failed. Please look into the UI notification center for more details.")
 
     def __get_task(self, upload_task_id: str) -> Dict[str, Any]:
         api_response = api_calls.get_request(
