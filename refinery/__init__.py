@@ -8,6 +8,8 @@ import json
 import os.path
 from tqdm import tqdm
 import spacy
+import time
+from refinery import settings
 
 
 class Client:
@@ -148,7 +150,9 @@ class Client:
                     )
 
             else:
-                msg.warn("There are no attributes that can be tokenized in this project.")
+                msg.warn(
+                    "There are no attributes that can be tokenized in this project."
+                )
 
         if download_to is not None:
             df.to_json(download_to, orient="records")
@@ -214,8 +218,48 @@ class Client:
             file_name,
         )
         if success:
-            msg.good(f"Uploaded {path} to your project.")
-            return True
+            msg.good(f"Uploaded {path} to object storage.")
+            upload_task_id = (
+                upload_task_id.split("/")[-1]
+                if "/" in upload_task_id
+                else upload_task_id
+            )
+            self.__monitor_task(upload_task_id)
+
         else:
-            msg.fail(f"Could not upload {path} to your project.")
-            return False
+            msg_text = f"Could not upload {path} to your project."
+            msg.fail(msg_text)
+            raise exceptions.FileImportError(msg_text)
+
+    def __monitor_task(self, upload_task_id):
+        do_monitoring = True
+        idx = 0
+        last_progress = 0.0
+        with tqdm(
+            total=100.00,
+            colour="green",
+            bar_format="{desc}: {percentage:.2f}%|{bar:10}| {n:.2f}/{total_fmt}",
+        ) as pbar:
+            pbar.set_description_str(desc="PENDING", refresh=True)
+            while do_monitoring:
+                idx += 1
+                task = self.__get_task(upload_task_id)
+                task_progress = task.get("progress") if task.get("progress") else 0.0
+                task_state = task.get("state") if task.get("state") else "FAILED"
+                progress = task_progress - last_progress
+                last_progress = task_progress
+                pbar.update(progress)
+                pbar.set_description_str(desc=task_state, refresh=True)
+                if task_state == "DONE" or task_state == "FAILED":
+                    do_monitoring = False
+                if idx >= 100:
+                    raise exceptions.FileImportError(
+                        "Timeout while upload, please check the upload progress in the UI."
+                    )
+                time.sleep(0.5)
+
+    def __get_task(self, upload_task_id):
+        api_response = api_calls.get_request(
+            settings.get_task(self.project_id, upload_task_id), self.session_token
+        )
+        return api_response
