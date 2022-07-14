@@ -252,6 +252,10 @@ class Client:
                 pbar.update(progress)
                 pbar.set_description_str(desc=task_state, refresh=True)
                 if task_state == "DONE" or task_state == "FAILED":
+                    if task_state == "DONE":
+                        msg.good("Upload successful.")
+                    else:
+                        msg.fail("Upload failed. Please look into the UI notification center for more details.")
                     do_monitoring = False
                 if idx >= 100:
                     raise exceptions.FileImportError(
