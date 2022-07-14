@@ -46,3 +46,7 @@ def get_import_url(project_id: str) -> str:
 
 def get_base_config(project_id: str) -> str:
     return f"{get_project_url(project_id)}/import/base_config"
+
+
+def get_task(project_id: str, task_id: str) -> str:
+    return f"{get_project_url(project_id)}/import/task/{task_id}"
