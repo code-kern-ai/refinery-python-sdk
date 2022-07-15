@@ -31,7 +31,7 @@ def main():
     cli_args = sys.argv[1:]
     if len(cli_args) == 0:
         msg.fail(
-            "Please provide some arguments when running the `refinery` command. Type `refinery help` for some instructions."
+            "Please provide some arguments when running the `rsdk` command. Type `rsdk help` for some instructions."
         )
     else:
         command = cli_args[0]
@@ -39,7 +39,7 @@ def main():
             pull()
         elif command == "push":
             if len(cli_args) != 2:
-                msg.fail("Please provide a path to a file when running refinery push.")
+                msg.fail("Please provide a path to a file when running rsdk push.")
             else:
                 file_path = cli_args[1]
                 push(file_path)
@@ -47,5 +47,5 @@ def main():
             help()
         else:
             msg.fail(
-                f"Could not understand command `{command}`. Type `refinery help` for some instructions."
+                f"Could not understand command `{command}`. Type `rsdk help` for some instructions."
             )
