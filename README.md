@@ -70,7 +70,7 @@ df = client.get_record_export(tokenize=False)
 # spaCy tokenizer will process your textual data
 ```
 
-Alternatively, you can also just run `refinery pull` in your CLI given that you have provided the `secrets.json` file in the same directory.
+Alternatively, you can also just run `rsdk pull` in your CLI given that you have provided the `secrets.json` file in the same directory.
 
 The `df` contains both your originally uploaded data (e.g. `headline` and `running_id` if you uploaded records like `{"headline": "some text", "running_id": 1234}`), and a triplet for each labeling task you create. This triplet consists of the manual labels, the weakly supervised labels, and their confidence. For extraction tasks, this data is on token-level.
 
@@ -114,7 +114,7 @@ upload_was_successful = client.post_file_import(file_path)
 
 We use Pandas to process the data you upload, so you can also provide `import_file_options` for the file type you use. Currently, you need to provide them as a `\n`-separated string (e.g. `"quoting=1\nsep=';'"`). We'll adapt this in the future to work with dictionaries instead.
 
-Alternatively, you can `refinery push <path-to-your-file>` via CLI, given that you have provided the `secrets.json` file in the same directory.
+Alternatively, you can `rsdk push <path-to-your-file>` via CLI, given that you have provided the `secrets.json` file in the same directory.
 
 **Make sure that you've selected the correct project beforehand, and fit the data schema of existing records in your project!**
 
