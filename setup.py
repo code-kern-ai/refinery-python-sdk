@@ -10,7 +10,7 @@ with open(os.path.join(this_directory, "README.md")) as file:
 
 setup(
     name="refinery-python-sdk",
-    version="1.0.0",
+    version="1.0.1",
     author="jhoetter",
     author_email="johannes.hoetter@kern.ai",
     description="Official Python SDK for Kern AI refinery.",
@@ -18,13 +18,13 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/code-kern-ai/refinery-python",
     keywords=[
-        "Kern AI", 
-        "refinery", 
-        "machine-learning", 
-        "supervised-learning", 
-        "data-centric-ai", 
-        "data-annotation", 
-        "python"
+        "Kern AI",
+        "refinery",
+        "machine-learning",
+        "supervised-learning",
+        "data-centric-ai",
+        "data-annotation",
+        "python",
     ],
     classifiers=[
         "Development Status :: 4 - Beta",
@@ -44,7 +44,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "refinery=refinery.cli:main",
+            "rsdk=refinery.cli:main",
         ],
     },
 )
