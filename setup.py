@@ -9,7 +9,7 @@ with open(os.path.join(this_directory, "README.md")) as file:
     long_description = file.read()
 
 setup(
-    name="refinery-python",
+    name="refinery-python-sdk",
     version="1.0.0",
     author="jhoetter",
     author_email="johannes.hoetter@kern.ai",

@@ -1,6 +1,6 @@
 [![refinery repository](https://uploads-ssl.webflow.com/61e47fafb12bd56b40022a49/62cf1c3cb8272b1e9c01127e_refinery%20sdk%20banner.png)](https://github.com/code-kern-ai/refinery)
 [![Python 3.9](https://img.shields.io/badge/python-3.9-blue.svg)](https://www.python.org/downloads/release/python-390/)
-[![pypi 1.0.0](https://img.shields.io/badge/pypi-1.0.0-yellow.svg)](https://pypi.org/project/refinery-python/1.0.0/)
+[![pypi 1.0.0](https://img.shields.io/badge/pypi-1.0.0-yellow.svg)](https://pypi.org/project/refinery-python-sdk/1.0.0/)
 
 This is the official Python SDK for [*refinery*](https://github.com/code-kern-ai/refinery), the **open-source** data-centric IDE for NLP.
 
@@ -23,7 +23,7 @@ If you like what we're working on, please leave a ⭐!
 
 ## Installation
 
-You can set up this SDK either via running `$ pip install refinery-python`, or by cloning this repository and running `$ pip install -r requirements.txt`.
+You can set up this SDK either via running `$ pip install refinery-python-sdk`, or by cloning this repository and running `$ pip install -r requirements.txt`.
 
 ## Usage
 
@@ -216,7 +216,7 @@ Let us know what open-source/closed-source NLP framework you are using, for whic
 - [x] Fetch project statistics
 
 
-If you want to have something added, feel free to open an [issue](https://github.com/code-kern-ai/refinery-python/issues).
+If you want to have something added, feel free to open an [issue](https://github.com/code-kern-ai/refinery-python-sdk/issues).
 
 ## Contributing
 Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
