@@ -1,7 +1,7 @@
-numpy==1.22.3
-pandas==1.4.2
-requests==2.27.1
-boto3==1.24.26
-botocore==1.27.26
-spacy==3.3.1
-wasabi==0.9.1
+numpy
+pandas
+requests
+boto3
+botocore
+spacy
+wasabi
