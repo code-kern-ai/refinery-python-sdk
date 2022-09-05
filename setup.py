@@ -10,7 +10,7 @@ with open(os.path.join(this_directory, "README.md")) as file:
 
 setup(
     name="refinery-python-sdk",
-    version="1.0.2",
+    version="1.1.0",
     author="jhoetter",
     author_email="johannes.hoetter@kern.ai",
     description="Official Python SDK for Kern AI refinery.",
@@ -34,13 +34,15 @@ setup(
     package_dir={"": "."},
     packages=find_packages("."),
     install_requires=[
-        "numpy==1.22.3",
-        "pandas==1.4.2",
-        "requests==2.27.1",
-        "boto3==1.24.26",
-        "botocore==1.27.26",
-        "spacy==3.3.1",
-        "wasabi==0.9.1",
+        "numpy",
+        "pandas",
+        "requests",
+        "boto3",
+        "botocore",
+        "spacy",
+        "wasabi",
+        "embedders",
+        "datasets",
     ],
     entry_points={
         "console_scripts": [

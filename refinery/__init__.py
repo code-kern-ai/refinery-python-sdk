@@ -111,6 +111,8 @@ class Client:
         num_samples: Optional[int] = None,
         download_to: Optional[str] = None,
         tokenize: Optional[bool] = True,
+        keep_attributes: Optional[List[str]] = None,
+        dropna: Optional[bool] = False,
     ) -> pd.DataFrame:
         """Collects the export data of your project (i.e. the same data if you would export in the web app).
 
@@ -154,6 +156,12 @@ class Client:
                 msg.warn(
                     "There are no attributes that can be tokenized in this project."
                 )
+
+        if keep_attributes is not None:
+            df = df[keep_attributes]
+
+        if dropna:
+            df = df.dropna()
 
         if download_to is not None:
             df.to_json(download_to, orient="records")
@@ -263,7 +271,9 @@ class Client:
         if print_success_message:
             msg.good("File upload successful.")
         else:
-            msg.fail("Upload failed. Please look into the UI notification center for more details.")
+            msg.fail(
+                "Upload failed. Please look into the UI notification center for more details."
+            )
 
     def __get_task(self, upload_task_id: str) -> Dict[str, Any]:
         api_response = api_calls.get_request(
