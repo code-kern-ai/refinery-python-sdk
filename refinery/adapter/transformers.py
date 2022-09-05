@@ -1,30 +1,16 @@
-from refinery import Client
-from datasets import load_dataset
 import os
+from refinery import Client
+from refinery.adapter.util import get_label_names, split_train_test_on_weak_supervision
+from datasets import load_dataset
 
 
-def build_dataset(client: Client, sentence_input, classification_label):
+def build_classification_dataset(client: Client, sentence_input, classification_label):
 
-    label_manual = f"{classification_label}__MANUAL"
-    manual_data = client.get_record_export(
-        tokenize=False, keep_attributes=[sentence_input, label_manual], dropna=True
-    ).rename(columns={label_manual: "label"})
-
-    label_weakly_supervised = f"{classification_label}__WEAK_SUPERVISION"
-    weakly_supervised_data = client.get_record_export(
-        tokenize=False,
-        keep_attributes=[sentence_input, label_weakly_supervised],
-        dropna=True,
-    ).rename(columns={label_weakly_supervised: "label"})
-
-    weakly_supervised_data = weakly_supervised_data.drop(manual_data.index)
-
-    labels = list(
-        set(
-            manual_data.label.unique().tolist()
-            + weakly_supervised_data.label.unique().tolist()
-        )
+    manual_data, weakly_supervised_data, labels = split_train_test_on_weak_supervision(
+        client, sentence_input, classification_label
     )
+
+    label_manual, label_weakly_supervised = get_label_names(classification_label)
 
     mapping = {k: v for v, k in enumerate(labels)}
 
