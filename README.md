@@ -12,6 +12,8 @@ This is the official Python SDK for [*refinery*](https://github.com/code-kern-ai
   - [Fetching lookup lists](#fetching-lookup-lists)
   - [Upload files](#upload-files)
   - [Adapters](#adapters)
+    - [HuggingFace](#hugging-face)
+    - [Sklearn](#sklearn)
     - [Rasa](#rasa)
     - [What's missing?](#whats-missing)
 - [Roadmap](#roadmap)
@@ -119,6 +121,77 @@ Alternatively, you can `rsdk push <path-to-your-file>` via CLI, given that you h
 **Make sure that you've selected the correct project beforehand, and fit the data schema of existing records in your project!**
 
 ### Adapters
+
+#### 🤗 Hugging Face
+Transformers are great, but often times, you want to finetune them for your downstream task. With *refinery*, you can do so easily by letting the SDK build the dataset for you that you can use as a plug-and-play base for your training:
+
+```python
+from refinery.adapter import transformers
+dataset, mapping = transformers.build_dataset(client, "headline", "__clickbait")
+```
+
+From here, you can follow the [finetuning example](https://huggingface.co/docs/transformers/training) provided in the official Hugging Face documentation. A next step could look as follows:
+
+```python
+small_train_dataset = dataset["train"].shuffle(seed=42).select(range(1000))
+small_eval_dataset = dataset["test"].shuffle(seed=42).select(range(1000))
+
+from transformers import (
+  AutoTokenizer, AutoModelForSequenceClassification, TrainingArguments, Trainer
+)
+import numpy as np
+from datasets import load_metric
+
+tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased")
+
+def tokenize_function(examples):
+    return tokenizer(examples["headline"], padding="max_length", truncation=True)
+
+tokenized_datasets = dataset.map(tokenize_function, batched=True)
+model = AutoModelForSequenceClassification.from_pretrained("distilbert-base-uncased", num_labels=2)
+training_args = TrainingArguments(output_dir="test_trainer")
+metric = load_metric("accuracy")
+
+def compute_metrics(eval_pred):
+    logits, labels = eval_pred
+    predictions = np.argmax(logits, axis=-1)
+    return metric.compute(predictions=predictions, references=labels)
+
+training_args = TrainingArguments(output_dir="test_trainer", evaluation_strategy="epoch")
+
+small_train_dataset = tokenized_datasets["train"].shuffle(seed=42).select(range(1000))
+small_eval_dataset = tokenized_datasets["test"].shuffle(seed=42).select(range(1000))
+
+trainer = Trainer(
+    model=model,
+    args=training_args,
+    train_dataset=small_train_dataset,
+    eval_dataset=small_eval_dataset,
+    compute_metrics=compute_metrics,
+)
+
+trainer.train()
+
+trainer.save_model("path/to/model")
+```
+
+#### Sklearn
+You can use *refinery* to directly pull data into a format you can apply for building [sklearn](https://github.com/scikit-learn/scikit-learn) models. This can look as follows:
+
+```python
+from refinery.adapter.embedders import build_classification_dataset
+from sklearn.tree import DecisionTreeClassifier
+
+data = build_classification_dataset(client, "headline", "__clickbait", "distilbert-base-uncased")
+
+clf = DecisionTreeClassifier()
+clf.fit(data["train"]["inputs"], data["train"]["labels"])
+
+pred_test = clf.predict(data["test"]["inputs"])
+accuracy = (pred_test == data["test"]["labels"]).mean()
+```
+
+By the way, we can highly recommend to combine this with [Truss](https://github.com/basetenlabs/truss) for easy model serving!
 
 #### Rasa
 *refinery* is perfect to be used for building chatbots with [Rasa](https://github.com/RasaHQ/rasa). We've built an adapter with which you can easily create the required Rasa training data directly from *refinery*.

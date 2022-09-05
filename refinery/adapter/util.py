@@ -1,35 +1,47 @@
-def get_label_names(_label):
-    label_manual = f"{_label}__MANUAL"
-    label_weakly_supervised = f"{_label}__WEAK_SUPERVISION"
-    return label_manual, label_weakly_supervised
+from typing import List, Tuple
+from refinery import Client
+import pandas as pd
 
 
-def split_train_test_on_weak_supervision(client, _input, _label):
+def split_train_test_on_weak_supervision(
+    client: Client, _input: str, _label: str
+) -> Tuple[pd.DataFrame, pd.DataFrame, List[str]]:
+    """
+    Puts the data into a train (weakly supervised data) and test set (manually labeled data).
+    Overlapping data is removed from the train set.
 
-    label_manual, label_weakly_supervised = get_label_names(_label)
-    manual_data = client.get_record_export(
+    Args:
+        client (Client): Refinery client
+        _input (str): Name of the column containing the sentence input.
+        _label (str): Name of the label; if this is a task on the full record, enter the string with as "__<label>". Else, input it as "<attribute>__<label>".
+
+    Returns:
+        Tuple[pd.DataFrame, pd.DataFrame, List[str]]: Containing the train and test dataframes and the label name options.
+    """
+
+    label_attribute_train = f"{_label}__WEAK_SUPERVISION"
+    label_attribute_test = f"{_label}__MANUAL"
+
+    df_train = client.get_record_export(
         tokenize=False,
-        keep_attributes=[_input, label_manual],
+        keep_attributes=[_input, label_attribute_train],
         dropna=True,
-    ).rename(columns={label_manual: "label"})
+    ).rename(columns={label_attribute_train: "label"})
 
-    weakly_supervised_data = client.get_record_export(
+    df_test = client.get_record_export(
         tokenize=False,
-        keep_attributes=[_input, label_weakly_supervised],
+        keep_attributes=[_input, label_attribute_test],
         dropna=True,
-    ).rename(columns={label_weakly_supervised: "label"})
+    ).rename(columns={label_attribute_test: "label"})
 
-    weakly_supervised_data = weakly_supervised_data.drop(manual_data.index)
+    df_train = df_train.drop(df_test.index)
 
-    labels = list(
-        set(
-            manual_data.label.unique().tolist()
-            + weakly_supervised_data.label.unique().tolist()
-        )
+    label_options = list(
+        set(df_test.label.unique().tolist() + df_train.label.unique().tolist())
     )
 
     return (
-        manual_data.reset_index(drop=True),
-        weakly_supervised_data.reset_index(drop=True),
-        labels,
+        df_train.reset_index(drop=True),
+        df_test.reset_index(drop=True),
+        label_options,
     )
