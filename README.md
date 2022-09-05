@@ -122,7 +122,7 @@ Alternatively, you can `rsdk push <path-to-your-file>` via CLI, given that you h
 
 ### Adapters
 
-#### 🤗 Hugging Face
+#### Hugging Face
 Transformers are great, but often times, you want to finetune them for your downstream task. With *refinery*, you can do so easily by letting the SDK build the dataset for you that you can use as a plug-and-play base for your training:
 
 ```python
