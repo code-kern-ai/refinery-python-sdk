@@ -81,6 +81,21 @@ class Client:
         api_response = api_calls.get_request(url, self.session_token)
         return api_response
 
+    def get_primary_keys(self) -> List[str]:
+        """Fetches the primary keys of your current project.
+
+        Returns:
+            List[str]: Containing the primary keys of your project.
+        """
+        project_details = self.get_project_details()
+        project_attributes = project_details["attributes"]
+
+        primary_keys = []
+        for attribute in project_attributes:
+            if attribute["is_primary_key"]:
+                primary_keys.append(attribute["name"])
+        return primary_keys
+
     def get_lookup_list(self, list_id: str) -> Dict[str, str]:
         """Fetches a lookup list of your current project.
 

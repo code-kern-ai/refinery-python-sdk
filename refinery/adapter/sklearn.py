@@ -25,7 +25,7 @@ def build_classification_dataset(
         Dict[str, Dict[str, Any]]: Containing the train and test datasets, with embedded inputs.
     """
 
-    df_train, df_test, _ = split_train_test_on_weak_supervision(
+    df_train, df_test, _, primary_keys = split_train_test_on_weak_supervision(
         client, sentence_input, classification_label, num_train
     )
 
@@ -40,7 +40,12 @@ def build_classification_dataset(
     return {
         "train": {
             "inputs": inputs_train,
+            "index": df_train[primary_keys].to_dict("records"),
             "labels": df_train["label"],
         },
-        "test": {"inputs": inputs_test, "labels": df_test["label"]},
+        "test": {
+            "inputs": inputs_test,
+            "index": df_test[primary_keys].to_dict("records"),
+            "labels": df_test["label"],
+        },
     }
