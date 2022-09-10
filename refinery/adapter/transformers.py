@@ -18,7 +18,12 @@ def build_classification_dataset(
         _type_: HuggingFace dataset
     """
 
-    df_train, df_test, label_options = split_train_test_on_weak_supervision(
+    (
+        df_train,
+        df_test,
+        label_options,
+        primary_keys,
+    ) = split_train_test_on_weak_supervision(
         client, sentence_input, classification_label
     )
 
@@ -44,4 +49,6 @@ def build_classification_dataset(
     if os.path.exists(test_file_path):
         os.remove(test_file_path)
 
-    return dataset, mapping
+    index = {"train": df_train[primary_keys], "test": df_test[primary_keys]}
+
+    return dataset, mapping, index

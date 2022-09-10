@@ -20,20 +20,27 @@ def split_train_test_on_weak_supervision(
         Tuple[pd.DataFrame, pd.DataFrame, List[str]]: Containing the train and test dataframes and the label name options.
     """
 
+    primary_keys = client.get_primary_keys()
+
     label_attribute_train = f"{_label}__WEAK_SUPERVISION"
     label_attribute_test = f"{_label}__MANUAL"
 
     df_test = client.get_record_export(
         tokenize=False,
-        keep_attributes=[_input, label_attribute_test],
+        keep_attributes=primary_keys + [_input, label_attribute_test],
         dropna=True,
     ).rename(columns={label_attribute_test: "label"})
 
+    if num_train is not None:
+        num_samples = num_train + len(df_test)
+    else:
+        num_samples = None
+
     df_train = client.get_record_export(
         tokenize=False,
-        keep_attributes=[_input, label_attribute_train],
+        keep_attributes=primary_keys + [_input, label_attribute_train],
         dropna=True,
-        num_samples=num_train + len(df_test),
+        num_samples=num_samples,
     ).rename(columns={label_attribute_train: "label"})
 
     # Remove overlapping data
@@ -47,4 +54,5 @@ def split_train_test_on_weak_supervision(
         df_train.reset_index(drop=True),
         df_test.reset_index(drop=True),
         label_options,
+        primary_keys,
     )
