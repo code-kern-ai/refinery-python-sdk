@@ -41,7 +41,7 @@ project_id = "your-project-id" # can be found in the URL of the web application
 
 client = Client(user_name, password, project_id)
 # if you run the application locally, please use the following instead:
-# client = Client(username, password, project_id, uri="http://localhost:4455")
+# client = Client(user_name, password, project_id, uri="http://localhost:4455")
 ```
 
 The `project_id` can be found in your browser, e.g. if you run the app on your localhost: `http://localhost:4455/app/projects/{project_id}/overview`

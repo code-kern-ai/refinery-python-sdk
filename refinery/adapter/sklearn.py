@@ -9,6 +9,7 @@ def build_classification_dataset(
     sentence_input: str,
     classification_label: str,
     config_string: Optional[str] = None,
+    num_train: Optional[int] = None,
 ) -> Dict[str, Dict[str, Any]]:
     """
     Builds a classification dataset from a refinery client and a config string.
@@ -18,22 +19,23 @@ def build_classification_dataset(
         sentence_input (str): Name of the column containing the sentence input.
         classification_label (str): Name of the label; if this is a task on the full record, enter the string with as "__<label>". Else, input it as "<attribute>__<label>".
         config_string (Optional[str], optional): Config string for the TransformerSentenceEmbedder. Defaults to None; if None is provided, the text will not be embedded.
+        num_train (Optional[int], optional): Number of training examples to use. Defaults to None; if None is provided, all examples will be used.
 
     Returns:
         Dict[str, Dict[str, Any]]: Containing the train and test datasets, with embedded inputs.
     """
 
-    df_test, df_train, _ = split_train_test_on_weak_supervision(
-        client, sentence_input, classification_label
+    df_train, df_test, _ = split_train_test_on_weak_supervision(
+        client, sentence_input, classification_label, num_train
     )
 
     if config_string is not None:
         embedder = TransformerSentenceEmbedder(config_string)
-        inputs_test = embedder.transform(df_test[sentence_input].tolist())
         inputs_train = embedder.transform(df_train[sentence_input].tolist())
+        inputs_test = embedder.transform(df_test[sentence_input].tolist())
     else:
-        inputs_test = df_test[sentence_input].tolist()
         inputs_train = df_train[sentence_input].tolist()
+        inputs_test = df_test[sentence_input].tolist()
 
     return {
         "train": {
