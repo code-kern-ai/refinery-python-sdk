@@ -1,11 +1,18 @@
 # -*- coding: utf-8 -*-
 from typing import Optional
 
+
 class LocalError(Exception):
     pass
 
+
 class UnknownItemError(LocalError):
     pass
+
+
+class PrimaryKeyError(LocalError):
+    pass
+
 
 # https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses
 class APIError(Exception):
@@ -24,9 +31,12 @@ class UnauthorizedError(APIError):
 class NotFoundError(APIError):
     pass
 
+
 class UnknownProjectError(APIError):
     def __init__(self, project_id: str):
-        super().__init__(message=f"Could not find project '{project_id}'. Please check your input.")
+        super().__init__(
+            message=f"Could not find project '{project_id}'. Please check your input."
+        )
 
 
 # 500 Server Error
@@ -37,9 +47,10 @@ class InternalServerError(APIError):
 class FileImportError(Exception):
     pass
 
+
 # mirror this from the rest api class ErrorCodes
 class ErrorCodes:
-    UNRECOGNIZED_USER = "UNRECOGNIZED_USER" # not actively used in SDK
+    UNRECOGNIZED_USER = "UNRECOGNIZED_USER"  # not actively used in SDK
     PROJECT_NOT_FOUND = "PROJECT_NOT_FOUND"
 
 
