@@ -43,6 +43,9 @@ def get_export_url(project_id: str) -> str:
 def get_import_url(project_id: str) -> str:
     return f"{get_project_url(project_id)}/import"
 
+def get_associations_url(project_id: str) -> str:
+    return f"{get_project_url(project_id)}/associations"
+
 
 def get_base_config(project_id: str) -> str:
     return f"{get_project_url(project_id)}/import/base_config"

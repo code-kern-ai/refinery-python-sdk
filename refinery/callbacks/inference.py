@@ -1,11 +1,30 @@
+from typing import Callable, Optional
 import pandas as pd
-from refinery import exceptions
+from refinery import Client, exceptions
 
 
 class ModelCallback:
     def __init__(
-        self, client, inference_fn, preprocessing_fn=None, postprocessing_fn=None
+        self,
+        model_name: str,
+        label_task_name: str,
+        inference_fn: Callable,
+        client: Client,
+        preprocessing_fn: Optional[Callable] = None,
+        postprocessing_fn: Optional[Callable] = None,
     ):
+        """
+
+        Args:
+            model_name (str): Name of the model (as an idenfitier in refinery)
+            label_task_name (str): Name of the label task (from refinery)
+            inference_fn (Callable): Function to predict the output
+            client (Client): Refinery client
+            preprocessing_fn (Optional[Callable], optional): Function to apply preprocessing to your inputs. Defaults to None.
+            postprocessing_fn (Optional[Callable], optional): Function to apply postprocessing to the inference function's output. Defaults to None.
+        """
+        self.model_name = model_name
+        self.label_task_name = label_task_name
         self.client = client
         self.inference_fn = inference_fn
         self.preprocessing_fn = preprocessing_fn
@@ -37,4 +56,10 @@ class ModelCallback:
             if self.postprocessing_fn is not None:
                 batched_outputs = self.postprocessing_fn(batched_outputs)
 
-            yield {"index": batched_indices, "associations": batched_outputs}
+            response = self.client.post_associations(
+                batched_outputs,
+                batched_indices,
+                self.model_name,
+                self.label_task_name,
+                "model_callback",
+            )
