@@ -36,7 +36,7 @@ def build_classification_dataset(
     config_string: Optional[str] = None,
     num_train: Optional[int] = None,
     batch_size: Optional[int] = 32,
-) -> Tuple[DataLoader, DataLoader, np.array]:
+) -> Tuple[DataLoader, DataLoader, preprocessing.LabelEncoder]:
     """
     Builds a classification dataset from a refinery client and a config string.
 
@@ -48,7 +48,7 @@ def build_classification_dataset(
         num_train (Optional[int], optional): Number of training examples to use. Defaults to None; if None is provided, all examples will be used.
 
     Returns:
-        Dict[str, Dict[str, Any]]: Containing the train and test datasets, with embedded inputs.
+        Tuple[DataLoader, DataLoader, preprocessing.LabelEncoder]: Tuple of train and test dataloaders, and the label encoder.
     """
     data = sklearn_build_classification_dataset(
         client, sentence_input, classification_label, config_string, num_train
@@ -63,4 +63,6 @@ def build_classification_dataset(
     train_loader = DataLoader(dataset=train_data, batch_size=batch_size)
     test_loader = DataLoader(dataset=test_data, batch_size=batch_size)
 
-    return train_loader, test_loader, le.classes_
+    index = {"train": data["train"]["index"], "test": data["test"]["index"]}
+
+    return train_loader, test_loader, le, index
