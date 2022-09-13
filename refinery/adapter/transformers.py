@@ -1,11 +1,15 @@
 import os
+from typing import Optional
 from refinery import Client
 from refinery.adapter.util import split_train_test_on_weak_supervision
 from datasets import load_dataset
 
 
 def build_classification_dataset(
-    client: Client, sentence_input: str, classification_label: str
+    client: Client,
+    sentence_input: str,
+    classification_label: str,
+    num_train: Optional[int] = 100,
 ):
     """Build a classification dataset from a refinery client and a config string useable for HuggingFace finetuning.
 
@@ -24,7 +28,7 @@ def build_classification_dataset(
         label_options,
         primary_keys,
     ) = split_train_test_on_weak_supervision(
-        client, sentence_input, classification_label
+        client, sentence_input, classification_label, num_train
     )
 
     mapping = {k: v for v, k in enumerate(label_options)}
@@ -49,6 +53,9 @@ def build_classification_dataset(
     if os.path.exists(test_file_path):
         os.remove(test_file_path)
 
-    index = {"train": df_train[primary_keys], "test": df_test[primary_keys]}
+    index = {
+        "train": df_train[primary_keys].to_dict(orient="records"),
+        "test": df_test[primary_keys].to_dict(orient="records"),
+    }
 
-    return dataset, mapping, index
+    return dataset, {f"LABEL_{value}": key for key, value in mapping.items()}, index

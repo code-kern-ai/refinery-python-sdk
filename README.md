@@ -12,11 +12,14 @@ This is the official Python SDK for [*refinery*](https://github.com/code-kern-ai
   - [Fetching lookup lists](#fetching-lookup-lists)
   - [Upload files](#upload-files)
   - [Adapters](#adapters)
-    - [HuggingFace](#hugging-face)
-    - [Sklearn](#sklearn)
-    - [Rasa](#rasa)
-    - [What's missing?](#whats-missing)
-- [Roadmap](#roadmap)
+    - [Sklearn](#sklearn-adapter)
+    - [PyTorch](#pytorch-adapter)
+    - [HuggingFace](#hugging-face-adapter)
+    - [Rasa](#rasa-adapter)
+  - [Callbacks](#callbacks)
+    - [Sklearn](#sklearn-callback)
+    - [PyTorch](#pytorch-callback)
+    - [HuggingFace](#hugging-face-callback)
 - [Contributing](#contributing)
 - [License](#license)
 - [Contact](#contact)
@@ -122,7 +125,35 @@ Alternatively, you can `rsdk push <path-to-your-file>` via CLI, given that you h
 
 ### Adapters
 
-#### Hugging Face
+#### Sklearn Adapter
+You can use *refinery* to directly pull data into a format you can apply for building [sklearn](https://github.com/scikit-learn/scikit-learn) models. This can look as follows:
+
+```python
+from refinery.adapter.sklearn import build_classification_dataset
+from sklearn.tree import DecisionTreeClassifier
+
+data = build_classification_dataset(client, "headline", "__clickbait", "distilbert-base-uncased")
+
+clf = DecisionTreeClassifier()
+clf.fit(data["train"]["inputs"], data["train"]["labels"])
+
+pred_test = clf.predict(data["test"]["inputs"])
+accuracy = (pred_test == data["test"]["labels"]).mean()
+```
+
+By the way, we can highly recommend to combine this with [Truss](https://github.com/basetenlabs/truss) for easy model serving!
+
+#### PyTorch Adapter
+If you want to build a [PyTorch](https://github.com/pytorch/pytorch) network, you can build the `train_loader` and `test_loader` as follows:
+
+```python
+from refinery.adapter.torch import build_classification_dataset
+train_loader, test_loader, encoder, index = build_classification_dataset(
+    client, "headline", "__clickbait", "distilbert-base-uncased"
+)
+```
+
+#### Hugging Face Adapter
 Transformers are great, but often times, you want to finetune them for your downstream task. With *refinery*, you can do so easily by letting the SDK build the dataset for you that you can use as a plug-and-play base for your training:
 
 ```python
@@ -175,25 +206,7 @@ trainer.train()
 trainer.save_model("path/to/model")
 ```
 
-#### Sklearn
-You can use *refinery* to directly pull data into a format you can apply for building [sklearn](https://github.com/scikit-learn/scikit-learn) models. This can look as follows:
-
-```python
-from refinery.adapter.sklearn import build_classification_dataset
-from sklearn.tree import DecisionTreeClassifier
-
-data = build_classification_dataset(client, "headline", "__clickbait", "distilbert-base-uncased")
-
-clf = DecisionTreeClassifier()
-clf.fit(data["train"]["inputs"], data["train"]["labels"])
-
-pred_test = clf.predict(data["test"]["inputs"])
-accuracy = (pred_test == data["test"]["labels"]).mean()
-```
-
-By the way, we can highly recommend to combine this with [Truss](https://github.com/basetenlabs/truss) for easy model serving!
-
-#### Rasa
+#### Rasa Adapter
 *refinery* is perfect to be used for building chatbots with [Rasa](https://github.com/RasaHQ/rasa). We've built an adapter with which you can easily create the required Rasa training data directly from *refinery*.
 
 To do so, do the following:
@@ -278,18 +291,167 @@ nlu:
 
 Please make sure to also create the further necessary files (`domain.yml`, `data/stories.yml` and `data/rules.yml`) if you want to train your Rasa chatbot. For further reference, see their [documentation](https://rasa.com/docs/rasa).
 
-#### What's missing?
-Let us know what open-source/closed-source NLP framework you are using, for which you'd like to have an adapter implemented in the SDK. To do so, simply create an issue in this repository with the tag "enhancement".
 
+### Callbacks
+If you want to feed your production model's predictions back into *refinery*, you can do so with any version greater than [1.2.1](https://github.com/code-kern-ai/refinery/releases/tag/v1.2.1).
 
-## Roadmap
-- [ ] Register heuristics via wrappers
-- [ ] Up/download zipped projects for versioning via DVC
-- [x] Add project upload
-- [x] Fetch project statistics
+To do so, we have a generalistic interface and framework-specific classes.
 
+#### Sklearn Callback
+If you want to train a scikit-learn model an feed its outputs back into the refinery, you can do so easily as follows:
 
-If you want to have something added, feel free to open an [issue](https://github.com/code-kern-ai/refinery-python-sdk/issues).
+```python
+from sklearn.linear_model import LogisticRegression
+clf = LogisticRegression() # we use this as an example, but you can use any model implementing predict_proba
+
+from refinery.adapter.sklearn import build_classification_dataset
+data = build_classification_dataset(client, "headline", "__clickbait", "distilbert-base-uncased")
+clf.fit(data["train"]["inputs"], data["train"]["labels"])
+
+from refinery.callbacks.sklearn import SklearnCallback
+callback = SklearnCallback(
+    client, 
+    clf,
+    "clickbait", 
+)
+
+# executing this will call the refinery API with batches of size 32, so your data is pushed to the app
+callback.run(data["train"]["inputs"], data["train"]["index"])
+callback.run(data["test"]["inputs"], data["test"]["index"])
+```
+
+#### PyTorch Callback
+For PyTorch, the procedure is really similar. You can do as follows:
+
+```python
+from refinery.adapter.torch import build_classification_dataset
+train_loader, test_loader, encoder, index = build_classification_dataset(
+    client, "headline", "__clickbait", "distilbert-base-uncased"
+)
+
+# build your custom model and train it here - example:
+import torch.nn as nn
+import numpy as np
+import torch
+
+# number of features (len of X cols)
+input_dim = 768
+# number of hidden layers
+hidden_layers = 20
+# number of classes (unique of y)
+output_dim = 2
+class Network(nn.Module):
+    def __init__(self):
+        super(Network, self).__init__()
+        self.linear1 = nn.Linear(input_dim, output_dim)
+   
+    def forward(self, x):
+        x = torch.sigmoid(self.linear1(x))
+        return x
+    
+clf = Network()
+criterion = nn.CrossEntropyLoss()
+optimizer = torch.optim.SGD(clf.parameters(), lr=0.1)
+
+epochs = 2
+for epoch in range(epochs):
+    running_loss = 0.0
+    for i, data in enumerate(train_loader, 0):
+        inputs, labels = data
+        # set optimizer to zero grad to remove previous epoch gradients
+        optimizer.zero_grad()
+        # forward propagation
+        outputs = clf(inputs)
+        loss = criterion(outputs, labels)
+        # backward propagation
+        loss.backward()
+        # optimize
+        optimizer.step()
+        running_loss += loss.item()
+        # display statistics
+        print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / 2000:.5f}')
+        running_loss = 0.0
+
+# with this model trained, you can use the callback
+from refinery.callbacks.torch import TorchCallback
+callback = TorchCallback(
+    client, 
+    clf,
+    "clickbait", 
+    encoder
+)
+
+# and just execute this 
+callback.run(train_loader, index["train"])
+callback.run(test_loader, index["test"])
+```
+
+#### HuggingFace Callback
+Collect the dataset and train your custom transformer model as follows:
+
+```python
+from refinery.adapter import transformers
+dataset, mapping, index = transformers.build_classification_dataset(client, "headline", "__clickbait")
+
+# train a model here, we're simplifying this by just using an existing model w/o retraining
+from transformers import pipeline
+pipe = pipeline("text-classification", model="distilbert-base-uncased")
+
+# if you're interested to see how a training looks like, look into the above HuggingFace adapter
+
+# you can now apply the callback
+from refinery.callbacks.transformers import TransformerCallback
+callback = TransformerCallback(
+    client, 
+    pipe,
+    "clickbait", 
+    mapping
+)
+
+callback.run(dataset["train"]["headline"], index["train"])
+callback.run(dataset["test"]["headline"], index["test"])
+```
+
+#### Generic Callback
+This one is your fallback if you have a very custom solution; other than that, we recommend you look into the framework-specific classes.
+
+```python
+from refinery.callbacks.inference import ModelCallback
+from refinery.adapter.sklearn import build_classification_dataset
+from sklearn.linear_model import LogisticRegression
+
+data = build_classification_dataset(client, "headline", "__clickbait", "distilbert-base-uncased"0)
+clf = LogisticRegression()
+clf.fit(data["train"]["inputs"], data["train"]["labels"])
+
+# you can build initialization functions that set states of objects you use in the pipeline
+def initialize_fn(inputs, labels, **kwargs):
+    return {"clf": kwargs["clf"]}
+
+# postprocessing shifts the model outputs into a format accepted by our API
+def postprocessing_fn(outputs, **kwargs):
+    named_outputs = []
+    for prediction in outputs:
+        pred_index = prediction.argmax()
+        label = kwargs["clf"].classes_[pred_index]
+        confidence = prediction[pred_index]
+        named_outputs.append([label, confidence])
+    return named_outputs
+
+callback = ModelCallback(
+    client: Client,
+    "my-custom-regression",
+    "clickbait",
+    inference_fn=clf.predict_proba,
+    initialize_fn=initialize_fn,
+    postprocessing_fn=postprocessing_fn
+)
+
+# executing this will call the refinery API with batches of size 32
+callback.initialize_and_run(data["train"]["inputs"], data["train"]["index"])
+callback.run(data["test"]["inputs"], data["test"]["index"])
+```
+
 
 ## Contributing
 Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.

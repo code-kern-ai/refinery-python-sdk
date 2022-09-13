@@ -183,6 +183,37 @@ class Client:
             msg.good(f"Downloaded export to {download_to}")
         return df
 
+    def post_associations(
+        self,
+        associations,
+        indices,
+        name,
+        label_task_name,
+        source_type: Optional[str] = "heuristic",
+    ):
+        """Posts associations to the server.
+
+        Args:
+            associations (List[Dict[str, str]]): List of associations to post.
+            indices (List[str]): List of indices to post to.
+            name (str): Name of the association set.
+            label_task_name (str): Name of the label task.
+            source_type (Optional[str], optional): Source type of the associations. Defaults to "heuristic".
+        """
+        url = settings.get_associations_url(self.project_id)
+        api_response = api_calls.post_request(
+            url,
+            {
+                "associations": associations,
+                "indices": indices,
+                "name": name,
+                "label_task_name": label_task_name,
+                "source_type": source_type,
+            },
+            self.session_token,
+        )
+        return api_response
+
     def post_file_import(
         self, path: str, import_file_options: Optional[str] = ""
     ) -> bool:
