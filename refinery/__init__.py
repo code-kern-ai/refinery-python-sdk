@@ -226,6 +226,15 @@ class Client:
         )
         return api_response
 
+    def post_df(self, df: pd.DataFrame):
+        """Posts a DataFrame to the server.
+
+        Args:
+            df (pd.DataFrame): DataFrame to post.
+        """
+        records = df.to_dict(orient="records")
+        return self.post_records(records)
+
     def post_file_import(
         self, path: str, import_file_options: Optional[str] = ""
     ) -> bool:
