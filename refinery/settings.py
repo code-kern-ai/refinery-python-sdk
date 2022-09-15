@@ -2,6 +2,8 @@
 BASE_URI: str
 DEFAULT_URI: str = "https://app.kern.ai"
 
+BATCH_SIZE_DEFAULT: int = 1000
+
 
 def set_base_uri(uri: str):
     global BASE_URI

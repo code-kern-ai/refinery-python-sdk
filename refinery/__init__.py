@@ -221,10 +221,15 @@ class Client:
             records (List[Dict[str, str]]): List of records to post.
         """
         url = settings.get_import_json_url(self.project_id)
-        api_response = api_calls.post_request(
-            url, {"records": records}, self.session_token
-        )
-        return api_response
+
+        batch_responses = []
+        for records_batch in util.batch(records, settings.BATCH_SIZE_DEFAULT):
+            api_response = api_calls.post_request(
+                url, {"records": records_batch}, self.session_token
+            )
+            batch_responses.append(api_response)
+            time.sleep(0.5)  # wait half a second to avoid server overload
+        return batch_responses
 
     def post_df(self, df: pd.DataFrame):
         """Posts a DataFrame to the server.
