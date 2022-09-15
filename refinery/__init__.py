@@ -214,6 +214,18 @@ class Client:
         )
         return api_response
 
+    def post_records(self, records: List[Dict[str, Any]]):
+        """Posts records to the server.
+
+        Args:
+            records (List[Dict[str, str]]): List of records to post.
+        """
+        url = settings.get_import_json_url(self.project_id)
+        api_response = api_calls.post_request(
+            url, {"records": records}, self.session_token
+        )
+        return api_response
+
     def post_file_import(
         self, path: str, import_file_options: Optional[str] = ""
     ) -> bool:
@@ -246,7 +258,7 @@ class Client:
         endpoint = config_api_response.get("KERN_S3_ENDPOINT")
 
         # credentials
-        credentials_url = settings.get_import_url(self.project_id)
+        credentials_url = settings.get_import_file_url(self.project_id)
         credentials_api_response = api_calls.post_request(
             credentials_url,
             {
