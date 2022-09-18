@@ -78,7 +78,11 @@ class Client:
             Dict[str, str]: dictionary containing the above information
         """
         url = settings.get_project_url(self.project_id)
-        api_response = api_calls.get_request(url, self.session_token)
+        api_response = api_calls.get_request(
+            url,
+            self.session_token,
+            self.project_id,
+        )
         return api_response
 
     def get_primary_keys(self) -> List[str]:
@@ -106,7 +110,11 @@ class Client:
             Dict[str, str]: Containing the specified lookup list of your project.
         """
         url = settings.get_lookup_list_url(self.project_id, list_id)
-        api_response = api_calls.get_request(url, self.session_token)
+        api_response = api_calls.get_request(
+            url,
+            self.session_token,
+            self.project_id,
+        )
         return api_response
 
     def get_lookup_lists(self) -> List[Dict[str, str]]:
@@ -139,7 +147,7 @@ class Client:
         """
         url = settings.get_export_url(self.project_id)
         api_response = api_calls.get_request(
-            url, self.session_token, **{"num_samples": num_samples}
+            url, self.session_token, self.project_id, **{"num_samples": num_samples}
         )
         df = pd.DataFrame(api_response)
 
@@ -211,8 +219,38 @@ class Client:
                 "source_type": source_type,
             },
             self.session_token,
+            self.project_id,
         )
         return api_response
+
+    def post_records(self, records: List[Dict[str, Any]]):
+        """Posts records to the server.
+
+        Args:
+            records (List[Dict[str, str]]): List of records to post.
+        """
+        url = settings.get_import_json_url(self.project_id)
+
+        batch_responses = []
+        for records_batch in util.batch(records, settings.BATCH_SIZE_DEFAULT):
+            api_response = api_calls.post_request(
+                url,
+                {"records": records_batch},
+                self.session_token,
+                self.project_id,
+            )
+            batch_responses.append(api_response)
+            time.sleep(0.5)  # wait half a second to avoid server overload
+        return batch_responses
+
+    def post_df(self, df: pd.DataFrame):
+        """Posts a DataFrame to the server.
+
+        Args:
+            df (pd.DataFrame): DataFrame to post.
+        """
+        records = df.to_dict(orient="records")
+        return self.post_records(records)
 
     def post_file_import(
         self, path: str, import_file_options: Optional[str] = ""
@@ -242,11 +280,12 @@ class Client:
         config_api_response = api_calls.get_request(
             config_url,
             self.session_token,
+            self.project_id,
         )
         endpoint = config_api_response.get("KERN_S3_ENDPOINT")
 
         # credentials
-        credentials_url = settings.get_import_url(self.project_id)
+        credentials_url = settings.get_import_file_url(self.project_id)
         credentials_api_response = api_calls.post_request(
             credentials_url,
             {
@@ -255,6 +294,7 @@ class Client:
                 "import_file_options": import_file_options,
             },
             self.session_token,
+            self.project_id,
         )
         credentials = credentials_api_response["Credentials"]
         access_key = credentials["AccessKeyId"]
@@ -323,6 +363,8 @@ class Client:
 
     def __get_task(self, upload_task_id: str) -> Dict[str, Any]:
         api_response = api_calls.get_request(
-            settings.get_task(self.project_id, upload_task_id), self.session_token
+            settings.get_task(self.project_id, upload_task_id),
+            self.session_token,
+            self.project_id,
         )
         return api_response
