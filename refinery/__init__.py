@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from uuid import uuid4
 from black import Any
 from wasabi import msg
 import pandas as pd
@@ -214,6 +215,44 @@ class Client:
         )
         return api_response
 
+    def post_records(self, records: List[Dict[str, Any]]):
+        """Posts records to the server.
+
+        Args:
+            records (List[Dict[str, str]]): List of records to post.
+        """
+        request_uuid = str(uuid4())
+        url = settings.get_import_json_url(self.project_id)
+
+        batch_responses = []
+        for records_batch in util.batch(records, settings.BATCH_SIZE_DEFAULT):
+            api_response = api_calls.post_request(
+                url,
+                {
+                    "request_uuid": request_uuid,
+                    "records": records_batch,
+                    "is_last": False,
+                },
+                self.session_token,
+            )
+            batch_responses.append(api_response)
+            time.sleep(0.5)  # wait half a second to avoid server overload
+        api_calls.post_request(
+            url,
+            {"request_uuid": request_uuid, "records": [], "is_last": True},
+            self.session_token,
+        )
+        return batch_responses
+
+    def post_df(self, df: pd.DataFrame):
+        """Posts a DataFrame to the server.
+
+        Args:
+            df (pd.DataFrame): DataFrame to post.
+        """
+        records = df.to_dict(orient="records")
+        return self.post_records(records)
+
     def post_file_import(
         self, path: str, import_file_options: Optional[str] = ""
     ) -> bool:
@@ -246,7 +285,7 @@ class Client:
         endpoint = config_api_response.get("KERN_S3_ENDPOINT")
 
         # credentials
-        credentials_url = settings.get_import_url(self.project_id)
+        credentials_url = settings.get_import_file_url(self.project_id)
         credentials_api_response = api_calls.post_request(
             credentials_url,
             {
