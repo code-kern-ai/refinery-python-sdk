@@ -12,16 +12,18 @@ except pkg_resources.DistributionNotFound:
     version = "noversion"
 
 
-def post_request(url: str, body: Dict[str, Any], session_token: str) -> str:
+def post_request(
+    url: str, body: Dict[str, Any], session_token: str, project_id: str
+) -> str:
     headers = _build_headers(session_token)
     response = requests.post(url=url, json=body, headers=headers)
-    return _handle_response(response)
+    return _handle_response(response, project_id)
 
 
-def get_request(url: str, session_token: str, **query_params) -> str:
+def get_request(url: str, session_token: str, project_id: str, **query_params) -> str:
     headers = _build_headers(session_token)
     response = requests.get(url=url, headers=headers, params=query_params)
-    return _handle_response(response)
+    return _handle_response(response, project_id)
 
 
 def _build_headers(session_token: str) -> Dict[str, str]:
@@ -33,7 +35,7 @@ def _build_headers(session_token: str) -> Dict[str, str]:
     }
 
 
-def _handle_response(response: requests.Response) -> str:
+def _handle_response(response: requests.Response, project_id: str) -> str:
     status_code = response.status_code
     if status_code == 200:
         json_data = response.json()
@@ -53,5 +55,6 @@ def _handle_response(response: requests.Response) -> str:
             status_code=status_code,
             error_code=error_code,
             error_message=error_message,
+            project_id=project_id,
         )
         raise exception

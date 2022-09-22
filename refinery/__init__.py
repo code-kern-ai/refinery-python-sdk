@@ -79,7 +79,11 @@ class Client:
             Dict[str, str]: dictionary containing the above information
         """
         url = settings.get_project_url(self.project_id)
-        api_response = api_calls.get_request(url, self.session_token)
+        api_response = api_calls.get_request(
+            url,
+            self.session_token,
+            self.project_id,
+        )
         return api_response
 
     def get_primary_keys(self) -> List[str]:
@@ -107,7 +111,11 @@ class Client:
             Dict[str, str]: Containing the specified lookup list of your project.
         """
         url = settings.get_lookup_list_url(self.project_id, list_id)
-        api_response = api_calls.get_request(url, self.session_token)
+        api_response = api_calls.get_request(
+            url,
+            self.session_token,
+            self.project_id,
+        )
         return api_response
 
     def get_lookup_lists(self) -> List[Dict[str, str]]:
@@ -140,7 +148,7 @@ class Client:
         """
         url = settings.get_export_url(self.project_id)
         api_response = api_calls.get_request(
-            url, self.session_token, **{"num_samples": num_samples}
+            url, self.session_token, self.project_id, **{"num_samples": num_samples}
         )
         df = pd.DataFrame(api_response)
 
@@ -212,6 +220,7 @@ class Client:
                 "source_type": source_type,
             },
             self.session_token,
+            self.project_id,
         )
         return api_response
 
@@ -234,6 +243,7 @@ class Client:
                     "is_last": False,
                 },
                 self.session_token,
+                self.project_id,
             )
             batch_responses.append(api_response)
             time.sleep(0.5)  # wait half a second to avoid server overload
@@ -241,6 +251,7 @@ class Client:
             url,
             {"request_uuid": request_uuid, "records": [], "is_last": True},
             self.session_token,
+            self.project_id,
         )
         return batch_responses
 
@@ -281,6 +292,7 @@ class Client:
         config_api_response = api_calls.get_request(
             config_url,
             self.session_token,
+            self.project_id,
         )
         endpoint = config_api_response.get("KERN_S3_ENDPOINT")
 
@@ -294,6 +306,7 @@ class Client:
                 "import_file_options": import_file_options,
             },
             self.session_token,
+            self.project_id,
         )
         credentials = credentials_api_response["Credentials"]
         access_key = credentials["AccessKeyId"]
@@ -362,6 +375,8 @@ class Client:
 
     def __get_task(self, upload_task_id: str) -> Dict[str, Any]:
         api_response = api_calls.get_request(
-            settings.get_task(self.project_id, upload_task_id), self.session_token
+            settings.get_task(self.project_id, upload_task_id),
+            self.session_token,
+            self.project_id,
         )
         return api_response
