@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from uuid import uuid4
 from black import Any
 from wasabi import msg
 import pandas as pd
@@ -229,18 +230,29 @@ class Client:
         Args:
             records (List[Dict[str, str]]): List of records to post.
         """
+        request_uuid = str(uuid4())
         url = settings.get_import_json_url(self.project_id)
 
         batch_responses = []
         for records_batch in util.batch(records, settings.BATCH_SIZE_DEFAULT):
             api_response = api_calls.post_request(
                 url,
-                {"records": records_batch},
+                {
+                    "request_uuid": request_uuid,
+                    "records": records_batch,
+                    "is_last": False,
+                },
                 self.session_token,
                 self.project_id,
             )
             batch_responses.append(api_response)
             time.sleep(0.5)  # wait half a second to avoid server overload
+        api_calls.post_request(
+            url,
+            {"request_uuid": request_uuid, "records": [], "is_last": True},
+            self.session_token,
+            self.project_id,
+        )
         return batch_responses
 
     def post_df(self, df: pd.DataFrame):

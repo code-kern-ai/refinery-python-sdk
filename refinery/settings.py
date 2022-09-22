@@ -2,6 +2,8 @@
 BASE_URI: str
 DEFAULT_URI: str = "https://app.kern.ai"
 
+BATCH_SIZE_DEFAULT: int = 1000
+
 
 def set_base_uri(uri: str):
     global BASE_URI
@@ -40,8 +42,13 @@ def get_export_url(project_id: str) -> str:
     return f"{get_project_url(project_id)}/export"
 
 
-def get_import_url(project_id: str) -> str:
-    return f"{get_project_url(project_id)}/import"
+def get_import_file_url(project_id: str) -> str:
+    return f"{get_project_url(project_id)}/import_file"
+
+
+def get_import_json_url(project_id: str) -> str:
+    return f"{get_project_url(project_id)}/import_json"
+
 
 def get_associations_url(project_id: str) -> str:
     return f"{get_project_url(project_id)}/associations"
