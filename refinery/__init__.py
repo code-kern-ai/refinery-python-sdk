@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 
 from uuid import uuid4
-from black import Any
 from wasabi import msg
 import pandas as pd
 from refinery import authentication, api_calls, settings, exceptions, util
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Any
 import json
 import os.path
 from tqdm import tqdm
