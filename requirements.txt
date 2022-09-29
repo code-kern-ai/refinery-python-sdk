@@ -2,6 +2,7 @@ numpy
 pandas
 requests
 boto3
+black
 botocore
 spacy
 wasabi
