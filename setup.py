@@ -10,7 +10,7 @@ with open(os.path.join(this_directory, "README.md")) as file:
 
 setup(
     name="refinery-python-sdk",
-    version="1.3.0",
+    version="1.4.0",
     author="jhoetter",
     author_email="johannes.hoetter@kern.ai",
     description="Official Python SDK for Kern AI refinery.",

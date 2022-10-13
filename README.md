@@ -1,6 +1,6 @@
 [![refinery repository](https://uploads-ssl.webflow.com/61e47fafb12bd56b40022a49/62cf1c3cb8272b1e9c01127e_refinery%20sdk%20banner.png)](https://github.com/code-kern-ai/refinery)
 [![Python 3.9](https://img.shields.io/badge/python-3.9-blue.svg)](https://www.python.org/downloads/release/python-390/)
-[![pypi 1.3.0](https://img.shields.io/badge/pypi-1.3.0-yellow.svg)](https://pypi.org/project/refinery-python-sdk/1.3.0/)
+[![pypi 1.4.0](https://img.shields.io/badge/pypi-1.4.0-yellow.svg)](https://pypi.org/project/refinery-python-sdk/1.4.0/)
 
 This is the official Python SDK for [*refinery*](https://github.com/code-kern-ai/refinery), the **open-source** data-centric IDE for NLP.
 
