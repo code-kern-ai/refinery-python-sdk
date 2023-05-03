@@ -158,7 +158,7 @@ Transformers are great, but often times, you want to finetune them for your down
 
 ```python
 from refinery.adapter import transformers
-dataset, mapping = transformers.build_dataset(client, "headline", "__clickbait")
+dataset, mapping, index = transformers.build_classification_dataset(client, "headline", "__clickbait")
 ```
 
 From here, you can follow the [finetuning example](https://huggingface.co/docs/transformers/training) provided in the official Hugging Face documentation. A next step could look as follows:
