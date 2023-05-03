@@ -9,7 +9,7 @@ def build_classification_dataset(
     client: Client,
     sentence_input: str,
     classification_label: str,
-    num_train: Optional[int] = 100,
+    num_train: Optional[int] = None,
 ):
     """Build a classification dataset from a refinery client and a config string useable for HuggingFace finetuning.
 
